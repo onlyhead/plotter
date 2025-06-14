@@ -12,67 +12,52 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(params
     -Wno-reorder
-    -Wno-unused-variable
+    -Wno-unused-variable  
     -Wno-unused-parameter
     -Wno-deprecated-declarations
+    -Wno-strict-aliasing
 )
 
 string(TOUPPER ${project_name} project_name_upper)
 option(${project_name_upper}_BUILD_EXAMPLES "Build examples" OFF)
 option(${project_name_upper}_ENABLE_TESTS "Enable tests" OFF)
-# option(${project_name_upper}_ENABLE_IMGUI "Enable ImGui support" ON)
+option(${project_name_upper}_ENABLE_IMGUI "Enable ImGui support" ON)
 include(FetchContent)
 
 set(ext_deps)
 # --------------------------------------------------------------------------------------------------
-# Find Python and NumPy for matplotlib-cpp functionality
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
-list(APPEND ext_deps Python3::Python Python3::NumPy)
-
-# --------------------------------------------------------------------------------------------------
 # ImGui Dependencies
 if(${project_name_upper}_ENABLE_IMGUI)
-    # Fetch ImGui
-    FetchContent_Declare(imgui
-        GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG v1.90.1
+    FetchContent_Declare(
+      imgui
+      GIT_REPOSITORY https://github.com/ocornut/imgui.git
+      GIT_TAG        v1.90.1
     )
+    FetchContent_GetProperties(imgui)
+    if(NOT imgui_POPULATED)
+      FetchContent_Populate(imgui)
+    endif()
 
-    # Fetch GLFW
-    FetchContent_Declare(glfw
-        GIT_REPOSITORY https://github.com/glfw/glfw.git
-        GIT_TAG 3.3.8
-    )
-
-    # Configure GLFW
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-
-    FetchContent_MakeAvailable(imgui glfw)
-
-    # Create ImGui library
+    # Create the ImGui library
     add_library(imgui_lib STATIC
-        ${imgui_SOURCE_DIR}/imgui.cpp
-        ${imgui_SOURCE_DIR}/imgui_demo.cpp
-        ${imgui_SOURCE_DIR}/imgui_draw.cpp
-        ${imgui_SOURCE_DIR}/imgui_tables.cpp
-        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+      ${imgui_SOURCE_DIR}/imgui.cpp
+      ${imgui_SOURCE_DIR}/imgui_demo.cpp
+      ${imgui_SOURCE_DIR}/imgui_draw.cpp
+      ${imgui_SOURCE_DIR}/imgui_tables.cpp
+      ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+      ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+      ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     )
 
-    target_include_directories(imgui_lib PUBLIC 
-        ${imgui_SOURCE_DIR}
-        ${imgui_SOURCE_DIR}/backends
+    target_include_directories(imgui_lib PUBLIC
+      ${imgui_SOURCE_DIR}
+      ${imgui_SOURCE_DIR}/backends
     )
 
-    # Find OpenGL
     find_package(OpenGL REQUIRED)
+    find_package(glfw3 3.3 REQUIRED)
     target_link_libraries(imgui_lib PUBLIC glfw OpenGL::GL)
 
-    # Add to external dependencies
     list(APPEND ext_deps imgui_lib)
 endif()
 

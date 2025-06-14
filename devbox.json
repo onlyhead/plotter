@@ -10,10 +10,13 @@
     "python313Packages.matplotlib@latest",
     "gcc@latest",
     "pkg-config@latest",
-    "wayland-protocols@latest",
+    "extra-cmake-modules@latest",
+    "fontconfig@latest",
+    "wayland@latest",
     "libxkbcommon@latest",
-    "mesa_glu@latest",
-    "wayland@latest"
+    "wayland-protocols@latest",
+    "mesa@latest",
+    "glfw@latest"
   ],
   "shell": {
     "init_hook": [

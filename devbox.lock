@@ -153,6 +153,150 @@
         }
       }
     },
+    "extra-cmake-modules@latest": {
+      "last_modified": "2025-05-16T20:19:48Z",
+      "resolved": "github:NixOS/nixpkgs/12a55407652e04dcf2309436eb06fef0d3713ef3#extra-cmake-modules",
+      "source": "devbox-search",
+      "version": "5.116.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1nywfap8szkx2qsm3q1mw7pxkwq82bj1-extra-cmake-modules-5.116.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/1nywfap8szkx2qsm3q1mw7pxkwq82bj1-extra-cmake-modules-5.116.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/a5a4i3p3b1q8bcy614sxichn541lq2lb-extra-cmake-modules-5.116.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/a5a4i3p3b1q8bcy614sxichn541lq2lb-extra-cmake-modules-5.116.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/7lncz49fln5352v2xki3jyi5in6wlxn9-extra-cmake-modules-5.116.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/7lncz49fln5352v2xki3jyi5in6wlxn9-extra-cmake-modules-5.116.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/p3ym2f06wnxlnlfrzvcrsipxns0hi9qn-extra-cmake-modules-5.116.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/p3ym2f06wnxlnlfrzvcrsipxns0hi9qn-extra-cmake-modules-5.116.0"
+        }
+      }
+    },
+    "fontconfig@latest": {
+      "last_modified": "2025-06-12T07:29:08Z",
+      "resolved": "github:NixOS/nixpkgs/d202f48f1249f013aa2660c6733e251c85712cbe#fontconfig",
+      "source": "devbox-search",
+      "version": "2.16.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/xg74rglwjw71jmcrrxx91sb0y8sg4z0b-fontconfig-2.16.0-bin",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/r8rirzfsj4z4839sqwmgd8didhwz9kqj-fontconfig-2.16.0-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/22y8nx9vz3pw1damp43g6ff7db8rkn6v-fontconfig-2.16.0-lib"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/cd3f556ag5zkfapkj3lfkl7ab0mywahk-fontconfig-2.16.0"
+            }
+          ],
+          "store_path": "/nix/store/xg74rglwjw71jmcrrxx91sb0y8sg4z0b-fontconfig-2.16.0-bin"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/w9zaiq2cid5n8rar16dc5vm9n6ncia4a-fontconfig-2.16.0-bin",
+              "default": true
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/kkhpm605l6s5gdgyx48idrd4h484r108-fontconfig-2.16.0"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/r20zc5vwq5fh5n7il7lmryg5nnf1lbdk-fontconfig-2.16.0-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/144vhivl0hc8jx0qhd8xv75ppqq0lk3r-fontconfig-2.16.0-lib"
+            }
+          ],
+          "store_path": "/nix/store/w9zaiq2cid5n8rar16dc5vm9n6ncia4a-fontconfig-2.16.0-bin"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/brqxjdjncaf795g7qrd5xm1hfml6slvc-fontconfig-2.16.0-bin",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/2n738x2lnaamqynibzfysvw3pfhj33ra-fontconfig-2.16.0-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/y9m455sldjl591w1l0xgcmybq6karcax-fontconfig-2.16.0-lib"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/iv5ff2j9p0brj2gh26nip43dn9l78pr9-fontconfig-2.16.0"
+            }
+          ],
+          "store_path": "/nix/store/brqxjdjncaf795g7qrd5xm1hfml6slvc-fontconfig-2.16.0-bin"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/64zabz1hxymxbcvp78hp9kacrygnf9l9-fontconfig-2.16.0-bin",
+              "default": true
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/ldn53xpxivf489d7z673c95fkihs5l8r-fontconfig-2.16.0-lib"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/izcym87m13m4nhjbxr2b2fp0r6wpl1s6-fontconfig-2.16.0"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/pnc1d1di32vfs0va1s5yf9h29b8rpqp6-fontconfig-2.16.0-dev"
+            }
+          ],
+          "store_path": "/nix/store/64zabz1hxymxbcvp78hp9kacrygnf9l9-fontconfig-2.16.0-bin"
+        }
+      }
+    },
     "gcc@latest": {
       "last_modified": "2025-05-28T23:33:38Z",
       "resolved": "github:NixOS/nixpkgs/e80506de785dc48dcfbb636c443c5e2b0b5b2d7d#gcc15",
@@ -241,6 +385,54 @@
       "last_modified": "2025-04-28T20:04:36Z",
       "resolved": "github:NixOS/nixpkgs/fdb6c240562c5ad516253419cc6f26819705d3e0?lastModified=1745870676&narHash=sha256-IpldIaWrlasZZlKHPxitkrJ1ex4EVphuWYXVDdF5kf4%3D"
     },
+    "glfw@latest": {
+      "last_modified": "2025-05-16T20:19:48Z",
+      "resolved": "github:NixOS/nixpkgs/12a55407652e04dcf2309436eb06fef0d3713ef3#glfw",
+      "source": "devbox-search",
+      "version": "3.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9x2jw8nigapnlfcwdcivhn45j2mdgfs8-glfw-3.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9x2jw8nigapnlfcwdcivhn45j2mdgfs8-glfw-3.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8nmrw6axiv4cswnav44141b5a4c7l8i4-glfw-3.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8nmrw6axiv4cswnav44141b5a4c7l8i4-glfw-3.4"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/w7lagagllbrvxf4xrf335hjy30skm2z6-glfw-3.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/w7lagagllbrvxf4xrf335hjy30skm2z6-glfw-3.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cjcsw0z51jkx5980b37m0lgmfpv8b0l1-glfw-3.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/cjcsw0z51jkx5980b37m0lgmfpv8b0l1-glfw-3.4"
+        }
+      }
+    },
     "libxkbcommon@latest": {
       "last_modified": "2025-05-27T11:07:55Z",
       "resolved": "github:NixOS/nixpkgs/e0042dedfbc9134ef973f64e5c7f56a38cc5cc97#libxkbcommon",
@@ -321,39 +513,63 @@
         }
       }
     },
-    "mesa_glu@latest": {
-      "last_modified": "2025-06-08T07:56:50Z",
-      "resolved": "github:NixOS/nixpkgs/8207ad0d501dd3590e0e81a7c56b386a5c4342c9#mesa_glu",
+    "mesa@latest": {
+      "last_modified": "2025-06-12T07:29:08Z",
+      "resolved": "github:NixOS/nixpkgs/d202f48f1249f013aa2660c6733e251c85712cbe#mesa",
       "source": "devbox-search",
-      "version": "9.0.3",
+      "version": "25.1.3",
       "systems": {
-        "aarch64-darwin": {
+        "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/31qjy5hj8sbm7yi8vyiq28v9chyx67bl-glu-9.0.3",
+              "path": "/nix/store/bpsn4p46ga7pfmprmbicmvl7j00xdsjd-mesa-25.1.3",
               "default": true
             },
             {
-              "name": "dev",
-              "path": "/nix/store/n52nb47lpb9pxymln36r03639xmhjs92-glu-9.0.3-dev"
+              "name": "cross_tools",
+              "path": "/nix/store/4pkj4yfdzx95da58x8kx08y2vfxcvndl-mesa-25.1.3-cross_tools"
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/mci7pv8h0zkc4b7l9f8v1z9jknci5yg3-mesa-25.1.3-debug"
+            },
+            {
+              "name": "opencl",
+              "path": "/nix/store/xwwq24cz8brhb6bknnlmgab6z1d4y80b-mesa-25.1.3-opencl"
+            },
+            {
+              "name": "spirv2dxil",
+              "path": "/nix/store/lwpjlhw9r9nxbfcf0r36ywvxkaylgm18-mesa-25.1.3-spirv2dxil"
             }
           ],
-          "store_path": "/nix/store/31qjy5hj8sbm7yi8vyiq28v9chyx67bl-glu-9.0.3"
+          "store_path": "/nix/store/bpsn4p46ga7pfmprmbicmvl7j00xdsjd-mesa-25.1.3"
         },
-        "x86_64-darwin": {
+        "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/xpb05ikg4fk5gh1vii3b07gpqclr5pn7-glu-9.0.3",
+              "path": "/nix/store/ijz8g3gibqyr2zqfkrhshb5f50a46dv5-mesa-25.1.3",
               "default": true
             },
             {
-              "name": "dev",
-              "path": "/nix/store/fbai2c3hkbplgz82xcspq8636na2q7yq-glu-9.0.3-dev"
+              "name": "spirv2dxil",
+              "path": "/nix/store/6rzhqgvk7b1s4wdy9pl8lrx0v50hmllz-mesa-25.1.3-spirv2dxil"
+            },
+            {
+              "name": "cross_tools",
+              "path": "/nix/store/qbyzggggrycrigqsxar17b1gk110szrb-mesa-25.1.3-cross_tools"
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/4shas4b98c30cdvzmrficin5y2af9npy-mesa-25.1.3-debug"
+            },
+            {
+              "name": "opencl",
+              "path": "/nix/store/i2883wkw87klcjjh3v2g721mf7fz04b9-mesa-25.1.3-opencl"
             }
           ],
-          "store_path": "/nix/store/xpb05ikg4fk5gh1vii3b07gpqclr5pn7-glu-9.0.3"
+          "store_path": "/nix/store/ijz8g3gibqyr2zqfkrhshb5f50a46dv5-mesa-25.1.3"
         }
       }
     },

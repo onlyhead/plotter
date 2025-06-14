@@ -1,19 +1,17 @@
-<img align="right" width="26%" src="./misc/logo.png">
-
 Plotter
 ==
 
-A modular C++ plotting library built on top of matplotlib  with a modern and modular design.
-
-Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/lava/matplotlib-cpp)
+A modern, self-contained C++ plotting library with header-only design and no external plotting dependencies.
 
 ## Key Features
 
 - **Header-only library** - Easy integration, no separate compilation needed
+- **Self-contained** - No dependency on external plotting libraries like matplotlib
 - **Modular architecture** - Organized into logical components for better maintainability  
 - **Modern C++20** - Uses latest C++ features and best practices
-- **Python/matplotlib backend** - Leverages the power and flexibility of matplotlib
-- **Easy to use** - Simple API similar to matplotlib and Matlab
+- **Multiple chart types** - Line plots, scatter plots, bar charts, and more
+- **Built-in math functions** - Generate sine waves, polynomials, and custom functions
+- **Easy to use** - Simple API for quick data visualization
 
 ---
 
@@ -21,19 +19,25 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 
 ### Complete minimal example:
 ```cpp
-#include "plotter/plotter.hpp"
-namespace plt = plotter;
+#include "plotter/plotter.h"
+using namespace Plotter;
 
 int main() {
-    plt::plot({1,3,2,4});
-    plt::show();
+    Chart chart("My Plot", ChartType::Line);
+    auto sine_data = Utils::createSineWave(0.0, 2*M_PI, 100);
+    chart.addData(sine_data);
+    chart.display();
     return 0;
+}
 }
 ```
 
 Build with:
 ```bash
-make compile
+mkdir build && cd build
+cmake .. -DPLOTTER_BUILD_EXAMPLES=ON
+make
+./main
 ```
 
 **Result:**
