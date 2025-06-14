@@ -212,4 +212,61 @@ namespace plotter {
 
     /// Disable interactive mode
     inline void ioff();
+
+    // ============ MISSING IMPLEMENTATIONS ============
+
+    // Implementation of figure function
+    inline long figure(long number) {
+        detail::_interpreter::get();
+
+        PyObject *args = PyTuple_New(1);
+        if (number == -1) {
+            PyTuple_SetItem(args, 0, Py_None);
+            Py_INCREF(Py_None);
+        } else {
+            PyTuple_SetItem(args, 0, PyLong_FromLong(number));
+        }
+
+        PyObject *res = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, args);
+        if (!res) {
+            Py_DECREF(args);
+            throw std::runtime_error("Call to figure() failed.");
+        }
+
+        long figure_number = PyLong_AsLong(res);
+
+        Py_DECREF(args);
+        Py_DECREF(res);
+
+        return figure_number;
+    }
+
+    // Implementation of close functions
+    inline void close() {
+        detail::_interpreter::get();
+
+        PyObject *res = PyObject_CallObject(detail::_interpreter::get().s_python_function_close,
+                                            detail::_interpreter::get().s_python_empty_tuple);
+        if (!res)
+            throw std::runtime_error("Call to close() failed.");
+
+        Py_DECREF(res);
+    }
+
+    inline void close(long fignum) {
+        detail::_interpreter::get();
+
+        PyObject *args = PyTuple_New(1);
+        PyTuple_SetItem(args, 0, PyLong_FromLong(fignum));
+
+        PyObject *res = PyObject_CallObject(detail::_interpreter::get().s_python_function_close, args);
+        if (!res) {
+            Py_DECREF(args);
+            throw std::runtime_error("Call to close() failed.");
+        }
+
+        Py_DECREF(args);
+        Py_DECREF(res);
+    }
+
 } // namespace plotter

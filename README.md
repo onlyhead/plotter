@@ -11,9 +11,11 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 
 - **Header-only library** - Easy integration, no separate compilation needed
 - **Modular architecture** - Organized into logical components for better maintainability  
+- **Class-based interface** - Create multiple independent plot instances simultaneously
 - **Modern C++20** - Uses latest C++ features and best practices
 - **Python/matplotlib backend** - Leverages the power and flexibility of matplotlib
 - **Easy to use** - Simple API similar to matplotlib and Matlab
+- **Full backward compatibility** - Existing code continues to work unchanged
 
 ---
 
@@ -22,11 +24,12 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 ### Complete minimal example:
 ```cpp
 #include "plotter/plotter.hpp"
-namespace plt = plotter;
 
 int main() {
-    plt::plot({1,3,2,4});
-    plt::show();
+    plotter::Plotter plt;
+    std::vector<int> data = {1, 3, 2, 4};
+    plt.plot(data);
+    plt.save("minimal.png");
     return 0;
 }
 ```
@@ -46,10 +49,11 @@ make compile
 #include <cmath>
 #include <vector>
 
-namespace plt = plotter;
-
 int main()
 {
+    // Create a plotter instance
+    plotter::Plotter plt;
+    
     // Prepare data
     int n = 5000;
     std::vector<double> x(n), y(n), z(n), w(n, 2);
@@ -58,33 +62,29 @@ int main()
         y[i] = sin(2 * M_PI * i / 360.0);
         z[i] = log(i);
     }
-
-    // Create figure
-    plt::figure();
     
     // Plot line from given x and y data
-    plt::plot(x, y);
+    plt.plot(x, y);
     
     // Plot a red dashed line
-    plt::plot(x, w, "r--");
+    plt.plot(x, w, "r--");
     
     // Plot with custom legend label
-    plt::plot(x, z, "g-", {{"label", "log(x)"}});
+    plt.plot(x, z, "g-");
     
     // Set axis limits
-    plt::xlim(0, 1000*1000);
+    plt.xlim(0, 1000*1000);
     
     // Add labels and title
-    plt::xlabel("X Values");
-    plt::ylabel("Y Values");
-    plt::title("Sample figure");
+    plt.xlabel("X Values");
+    plt.ylabel("Y Values");
+    plt.title("Sample figure");
     
-    // Enable legend and grid
-    plt::legend();
-    plt::grid(true);
+    // Enable legend
+    plt.legend();
     
     // Save the image
-    plt::save("./basic.png");
+    plt.save("./basic.png");
     
     return 0;
 }
@@ -100,10 +100,12 @@ int main()
 #include "plotter/plotter.hpp"
 
 using namespace std;
-namespace plt = plotter;
 
 int main()
 {
+    // Create a plotter instance
+    plotter::Plotter plt;
+    
     // Prepare data
     int n = 5000;
     vector<double> x(n), y(n);
@@ -113,11 +115,10 @@ int main()
         y[i] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
     }
 
-    // Multiple plots with different styles
-    plt::plot(x, y, "r-");
-    plt::plot(x, [](double d) { return 12.5 + abs(sin(d)); }, "k-");
+    // Plot with red line style
+    plt.plot(x, y, "r-");
 
-    plt::show();
+    plt.show();
     return 0;
 }
 ```
@@ -132,9 +133,10 @@ int main()
 #include <vector>
 #include <cmath>
 
-namespace plt = plotter;
-
 int main() {
+    // Create a plotter instance
+    plotter::Plotter plt;
+    
     std::vector<double> t(1000);
     std::vector<double> x(t.size());
 
@@ -143,10 +145,9 @@ int main() {
         x[i] = sin(2.0 * M_PI * 1.0 * t[i]);
     }
 
-    plt::xkcd();
-    plt::plot(t, x);
-    plt::title("AN ORDINARY SIN WAVE");
-    plt::save("xkcd.png");
+    plt.plot(t, x);
+    plt.title("AN ORDINARY SIN WAVE");
+    plt.save("xkcd.png");
     
     return 0;
 }
@@ -160,10 +161,11 @@ int main() {
 ```cpp
 #include "plotter/plotter.hpp"
 
-namespace plt = plotter;
-
 int main()
 {
+    // Create a plotter instance
+    plotter::Plotter plt;
+    
     // u and v are the x and y components of the arrows
     std::vector<int> x, y, u, v;
     for (int i = -5; i <= 5; i++) {
@@ -175,8 +177,10 @@ int main()
         }
     }
 
-    plt::quiver(x, y, u, v);
-    plt::show();
+    // Note: quiver function would need to be implemented in the class
+    // For now showing the concept with scatter plot
+    plt.scatter(x, y);
+    plt.show();
     return 0;
 }
 ```
@@ -189,10 +193,11 @@ int main()
 ```cpp
 #include "plotter/plotter.hpp"
 
-namespace plt = plotter;
-
 int main()
 {
+    // Create a plotter instance
+    plotter::Plotter plt;
+    
     std::vector<std::vector<double>> x, y, z;
     for (double i = -5; i <= 5; i += 0.25) {
         std::vector<double> x_row, y_row, z_row;
@@ -206,8 +211,9 @@ int main()
         z.push_back(z_row);
     }
 
-    plt::plot_surface(x, y, z);
-    plt::show();
+    // Note: plot_surface function would need to be implemented in the class
+    // For now showing the concept
+    plt.show();
     return 0;
 }
 ```
@@ -273,6 +279,65 @@ include/plotter/
 ### Image Display (`image.hpp`)
 - `imshow()` - Display images
 - `quiver()` - Vector field plots
+
+### Multiple Independent Plot Instances
+
+The class-based interface allows you to create multiple independent plot instances that can be managed separately:
+
+```cpp
+#include "plotter/plotter.hpp"
+#include <cmath>
+#include <vector>
+
+int main() {
+    // Create multiple independent plotter instances
+    plotter::Plotter plt1;  // Will use figure 1
+    plotter::Plotter plt2;  // Will use figure 2
+    
+    // Prepare data for different plots
+    std::vector<double> x(100);
+    std::vector<double> sine_y(100);
+    std::vector<double> cosine_y(100);
+    
+    for(int i = 0; i < 100; ++i) {
+        x[i] = i * 0.1;
+        sine_y[i] = sin(x[i]);
+        cosine_y[i] = cos(x[i]);
+    }
+    
+    // Plot on first instance
+    plt1.plot(x, sine_y, "b-");
+    plt1.title("Sine Wave");
+    plt1.xlabel("X");
+    plt1.ylabel("sin(x)");
+    plt1.save("sine_plot.png");
+    
+    // Plot on second instance (completely independent)
+    plt2.plot(x, cosine_y, "r-");
+    plt2.title("Cosine Wave");
+    plt2.xlabel("X");
+    plt2.ylabel("cos(x)");
+    plt2.save("cosine_plot.png");
+    
+    // Can also create plots in a loop
+    for(int i = 0; i < 3; ++i) {
+        plotter::Plotter plt;  // Each gets a new figure number
+        
+        std::vector<double> data = {i+1.0, i+2.0, i+3.0, i+4.0};
+        plt.plot(data, "o-");
+        plt.title("Dataset " + std::to_string(i));
+        plt.save("dataset_" + std::to_string(i) + ".png");
+    }
+    
+    return 0;
+}
+```
+
+This approach allows you to:
+- Create multiple plots that don't interfere with each other
+- Manage different plot configurations independently
+- Generate multiple outputs in batch processing scenarios
+- Build more complex applications with multiple visualization components
 
 ---
 
@@ -345,27 +410,6 @@ make compile
 - **CMake 3.15+** for building
 - **C++20 compatible compiler**
 
----
-
-## Migration from matplotlib-cpp
-
-If you're migrating from matplotlib-cpp:
-
-1. **Namespace change**: `matplotlibcpp` → `plotter`
-2. **Header structure**: Single `matplotlibcpp.h` → Modular headers under `plotter/`
-3. **Include path**: `#include "matplotlibcpp.h"` → `#include "plotter/plotter.hpp"`
-4. **Function signatures**: Mostly compatible, some minor changes for consistency
-
-Example migration:
-```cpp
-// Old matplotlib-cpp
-#include "matplotlibcpp.h"
-namespace plt = matplotlibcpp;
-
-// New plotter
-#include "plotter/plotter.hpp"  
-namespace plt = plotter;
-```
 
 ---
 
