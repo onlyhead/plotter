@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(project_name relearn)
-project(${project_name} VERSION 0.1.0 LANGUAGES CXX)
+set(project_name plotter)
+project(${project_name} VERSION 0.0.1 LANGUAGES CXX)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 cmake_policy(SET CMP0074 NEW)
@@ -22,7 +22,10 @@ option(${project_name_upper}_ENABLE_TESTS "Enable tests" OFF)
 include(FetchContent)
 
 # --------------------------------------------------------------------------------------------------
-set(ext_deps)
+# Find Python and NumPy for matplotlib-cpp functionality
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+
+set(ext_deps Python3::Python Python3::NumPy)
 
 
 # --------------------------------------------------------------------------------------------------
