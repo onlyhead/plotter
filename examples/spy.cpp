@@ -1,12 +1,11 @@
-#include "../matplotlibcpp.h"
+#include <plotter/plotter.hpp>
 
 #include <iostream>
 #include <vector>
 
-namespace plt = matplotlibcpp;
+namespace plt = plotter;
 
-int main()
-{
+int main() {
     const int n = 20;
     std::vector<std::vector<double>> matrix;
 

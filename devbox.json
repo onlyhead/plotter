@@ -7,7 +7,13 @@
     "stdenv@latest",
     "python-full@latest",
     "python313Packages.numpy@latest",
-    "python313Packages.matplotlib@latest"
+    "python313Packages.matplotlib@latest",
+    "gcc@latest",
+    "pkg-config@latest",
+    "wayland-protocols@latest",
+    "libxkbcommon@latest",
+    "mesa_glu@latest",
+    "wayland@latest"
   ],
   "shell": {
     "init_hook": [

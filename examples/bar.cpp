@@ -1,9 +1,9 @@
 #define _USE_MATH_DEFINES
 
 #include <iostream>
+#include <plotter/plotter.hpp>
 #include <string>
-#include "../matplotlibcpp.h"
-namespace plt = matplotlibcpp;
+namespace plt = plotter;
 
 int main(int argc, char **argv) {
     std::vector<int> test_data;

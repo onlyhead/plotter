@@ -1,13 +1,12 @@
-#include "../matplotlibcpp.h"
+#include <plotter/plotter.hpp>
 
 #include <cmath>
 
-namespace plt = matplotlibcpp;
+namespace plt = plotter;
 
-int main()
-{
+int main() {
     std::vector<std::vector<double>> x, y, z;
-    for (double i = -5; i <= 5;  i += 0.25) {
+    for (double i = -5; i <= 5; i += 0.25) {
         std::vector<double> x_row, y_row, z_row;
         for (double j = -5; j <= 5; j += 0.25) {
             x_row.push_back(i);

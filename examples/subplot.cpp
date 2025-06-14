@@ -1,31 +1,30 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include "../matplotlibcpp.h"
+#include <plotter/plotter.hpp>
 
 using namespace std;
-namespace plt = matplotlibcpp;
+using namespace plotter;
 
-int main() 
-{
+int main() {
     // Prepare data
-	int n = 500;
-	std::vector<double> x(n), y(n), z(n), w(n,2);
-	for(int i=0; i<n; ++i) {
-		x.at(i) = i;
-		y.at(i) = sin(2*M_PI*i/360.0);
-		z.at(i) = 100.0 / i;
-	}
+    int n = 500;
+    std::vector<double> x(n), y(n), z(n), w(n, 2);
+    for (int i = 0; i < n; ++i) {
+        x.at(i) = i;
+        y.at(i) = sin(2 * M_PI * i / 360.0);
+        z.at(i) = 100.0 / i;
+    }
 
     // Set the "super title"
-    plt::suptitle("My plot");
-    plt::subplot(1, 2, 1);
-	plt::plot(x, y, "r-");
-    plt::subplot(1, 2, 2);
-    plt::plot(x, z, "k-");
+    suptitle("My plot");
+    subplot(1, 2, 1);
+    plot(x, y, "r-");
+    subplot(1, 2, 2);
+    plot(x, z, "k-");
     // Add some text to the plot
-    plt::text(100, 90, "Hello!");
+    text(100, 90, "Hello!");
 
-
-	// Show plots
-	plt::show();
+    // Show plots
+    show();
+    return 0;
 }
