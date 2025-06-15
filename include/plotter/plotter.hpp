@@ -12,6 +12,10 @@
 #include "internal/plots.hpp"
 #include "internal/scatter.hpp"
 
+#include <iostream>
+#include <vector>
+#include <string>
+
 namespace plotter {
 
     /// Class-based plotter interface
@@ -25,8 +29,19 @@ namespace plotter {
         pigment::Palette color_palette_;
         size_t current_color_index_;
 
+        // Animation support
+        bool animation_mode_;
+        std::vector<std::string> animation_frames_;  // Store frame data as base64 or file paths
+        int frame_duration_ms_;  // Duration of each frame in milliseconds
+
         /// Select this figure as current
         void select_figure();
+
+        /// Capture current plot as a frame (internal method)
+        void capture_frame();
+
+        /// Create animated GIF from captured frames (internal method)
+        void save_animated_gif(const char *filename);
 
       public:
         /// Constructor - creates a new figure
@@ -48,51 +63,33 @@ namespace plotter {
         long figure_number() const { return figure_num_; }
 
         // ============ PLOTTING FUNCTIONS ============
+        // All plotting functions now use Concord Points exclusively
 
-        /// Plot a line through the given x and y data points
-        template <typename NumericX, typename NumericY>
-        bool plot(const std::vector<NumericX> &x, const std::vector<NumericY> &y);
-
-        /// Plot a line with format string
-        template <typename NumericX, typename NumericY>
-        bool plot(const std::vector<NumericX> &x, const std::vector<NumericY> &y, const char *format);
-
-        /// Plot a line with only y data (x will be 0, 1, 2, ...)
-        template <typename Numeric> bool plot(const std::vector<Numeric> &y);
-
-        /// Plot with format string
-        template <typename Numeric> bool plot(const std::vector<Numeric> &y, const char *format);
-
-        /// Scatter plot
-        template <typename NumericX, typename NumericY>
-        bool scatter(const std::vector<NumericX> &x, const std::vector<NumericY> &y);
-
-        /// Scatter plot with size
-        template <typename NumericX, typename NumericY>
-        bool scatter(const std::vector<NumericX> &x, const std::vector<NumericY> &y, double s);
-
-        /// Bar plot
-        template <typename Numeric> bool bar(const std::vector<Numeric> &y);
-
-        // ============ CONCORD INTEGRATION FUNCTIONS ============
-
-        /// Plot points using Concord Point objects
+        /// Plot a line through the given points
         bool plot(const std::vector<concord::Point> &points);
 
-        /// Plot points with Pigment color
+        /// Plot a line with Pigment color
         bool plot(const std::vector<concord::Point> &points, const pigment::RGB &color);
 
-        /// Plot points with format string
+        /// Plot a line with format string (for line styles)
         bool plot(const std::vector<concord::Point> &points, const char *format);
 
         /// Scatter plot using Concord Points
         bool scatter(const std::vector<concord::Point> &points);
 
-        /// Scatter plot using Concord Points with Pigment color
+        /// Scatter plot with Pigment color
         bool scatter(const std::vector<concord::Point> &points, const pigment::RGB &color);
 
-        /// Scatter plot using Concord Points with size and color
+        /// Scatter plot with size and color
         bool scatter(const std::vector<concord::Point> &points, double s, const pigment::RGB &color);
+
+        /// Bar plot using Concord Points (x-coordinates for positions, y-coordinates for heights)
+        bool bar(const std::vector<concord::Point> &points);
+
+        /// Bar plot with Pigment color
+        bool bar(const std::vector<concord::Point> &points, const pigment::RGB &color);
+
+        // ============ ADVANCED PLOTTING FUNCTIONS ============
 
         /// Plot a circle using Concord geometry
         bool plot_circle(double center_x, double center_y, double radius,
@@ -122,6 +119,28 @@ namespace plotter {
         /// Save the plot to file
         void save(const char *filename);
         void save(const char *filename, int dpi);
+        void save(const char *filename, bool animation);
+        void save(const char *filename, int dpi, bool animation);
+
+        // ============ ANIMATION FUNCTIONS ============
+
+        /// Enable animation mode - captures frames for GIF creation
+        void enable_animation(int frame_duration_ms = 100);
+
+        /// Disable animation mode
+        void disable_animation();
+
+        /// Check if animation mode is enabled
+        bool is_animation_enabled() const;
+
+        /// Clear all captured frames
+        void clear_frames();
+
+        /// Get number of captured frames
+        size_t frame_count() const;
+
+        /// Set frame duration for GIF animation
+        void set_frame_duration(int duration_ms);
 
         /// Clear the current figure
         void clf();
@@ -130,10 +149,10 @@ namespace plotter {
         void figure_size(int width, int height);
 
         /// Set x-axis limits
-        template <typename Numeric> void xlim(Numeric left, Numeric right);
+        void xlim(double left, double right);
 
         /// Set y-axis limits
-        template <typename Numeric> void ylim(Numeric bottom, Numeric top);
+        void ylim(double bottom, double top);
 
         /// Add title
         void title(const char *titlestr);
@@ -152,14 +171,14 @@ namespace plotter {
     }; // class Plotter
 
     // Static member definition
-    long Plotter::next_figure_num_ = 1;
+    inline long Plotter::next_figure_num_ = 1;
 
     // ============ IMPLEMENTATION ============
 
     // Constructor - creates a new figure
     inline Plotter::Plotter()
         : figure_num_(next_figure_num_++), color_palette_(integrations::color::create_default_palette()),
-          current_color_index_(0) {
+          current_color_index_(0), animation_mode_(false), frame_duration_ms_(100) {
         detail::_interpreter::get(); // Initialize interpreter
         // Don't call select_figure() in constructor to avoid Python figure creation issues
     }
@@ -167,14 +186,15 @@ namespace plotter {
     // Constructor with specific figure number
     inline Plotter::Plotter(long figure_num)
         : figure_num_(figure_num), color_palette_(integrations::color::create_default_palette()),
-          current_color_index_(0) {
+          current_color_index_(0), animation_mode_(false), frame_duration_ms_(100) {
         detail::_interpreter::get(); // Initialize interpreter
         // Don't call select_figure() in constructor to avoid Python figure creation issues
     }
 
     // Copy constructor
     inline Plotter::Plotter(const Plotter &other)
-        : figure_num_(next_figure_num_++), color_palette_(other.color_palette_), current_color_index_(0) {
+        : figure_num_(next_figure_num_++), color_palette_(other.color_palette_), current_color_index_(0),
+          animation_mode_(false), frame_duration_ms_(100) {
         detail::_interpreter::get(); // Initialize interpreter
         // Don't call select_figure() in constructor to avoid Python figure creation issues
     }
@@ -197,53 +217,81 @@ namespace plotter {
 
     // ============ PLOTTING FUNCTION IMPLEMENTATIONS ============
 
-    template <typename NumericX, typename NumericY>
-    inline bool Plotter::plot(const std::vector<NumericX> &x, const std::vector<NumericY> &y) {
+    /// Plot points using Concord Point objects
+    inline bool Plotter::plot(const std::vector<concord::Point> &points) {
         select_figure();
-        return plotter::plot(x, y);
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
+        bool result = plotter::plot(x, y);
+        capture_frame();  // Capture frame if in animation mode
+        return result;
     }
 
-    template <typename NumericX, typename NumericY>
-    inline bool Plotter::plot(const std::vector<NumericX> &x, const std::vector<NumericY> &y, const char *format) {
+    /// Plot points with Pigment color
+    inline bool Plotter::plot(const std::vector<concord::Point> &points, const pigment::RGB &color) {
         select_figure();
-        return plotter::plot(x, y, std::string(format));
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
+        std::map<std::string, std::string> keywords;
+        keywords["color"] = integrations::color::to_matplotlib_color(color);
+        bool result = plotter::plot(x, y, keywords);
+        capture_frame();  // Capture frame if in animation mode
+        return result;
     }
 
-    template <typename Numeric> inline bool Plotter::plot(const std::vector<Numeric> &y) {
+    /// Plot points with format string
+    inline bool Plotter::plot(const std::vector<concord::Point> &points, const char *format) {
         select_figure();
-        return plotter::plot(y);
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
+        bool result = plotter::plot(x, y, std::string(format));
+        capture_frame();  // Capture frame if in animation mode
+        return result;
     }
 
-    template <typename Numeric> inline bool Plotter::plot(const std::vector<Numeric> &y, const char *format) {
+    /// Scatter plot using Concord Points
+    inline bool Plotter::scatter(const std::vector<concord::Point> &points) {
         select_figure();
-        return plotter::plot(y, std::string(format));
-    }
-
-    template <typename NumericX, typename NumericY>
-    inline bool Plotter::scatter(const std::vector<NumericX> &x, const std::vector<NumericY> &y) {
-        select_figure();
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
         return plotter::scatter(x, y);
     }
 
-    template <typename NumericX, typename NumericY>
-    inline bool Plotter::scatter(const std::vector<NumericX> &x, const std::vector<NumericY> &y, double s) {
+    /// Scatter plot using Concord Points with Pigment color
+    inline bool Plotter::scatter(const std::vector<concord::Point> &points, const pigment::RGB &color) {
         select_figure();
-        return plotter::scatter(x, y, s);
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
+        std::map<std::string, std::string> keywords;
+        keywords["color"] = integrations::color::to_matplotlib_color(color);
+        return plotter::scatter(x, y, keywords);
     }
 
-    template <typename Numeric> inline bool Plotter::bar(const std::vector<Numeric> &y) {
+    /// Scatter plot using Concord Points with size and color
+    inline bool Plotter::scatter(const std::vector<concord::Point> &points, double s, const pigment::RGB &color) {
         select_figure();
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
+        std::map<std::string, std::string> keywords;
+        keywords["s"] = std::to_string(s);
+        keywords["color"] = integrations::color::to_matplotlib_color(color);
+        return plotter::scatter(x, y, keywords);
+    }
+
+    /// Bar plot using Concord Points (x-coordinates for positions, y-coordinates for heights)
+    inline bool Plotter::bar(const std::vector<concord::Point> &points) {
+        select_figure();
+        auto x = integrations::geometry::extract_x(points);
+        auto y = integrations::geometry::extract_y(points);
+        return plotter::bar(x, y);
+    }
+
+    /// Bar plot with Pigment color
+    inline bool Plotter::bar(const std::vector<concord::Point> &points, const pigment::RGB &color) {
+        select_figure();
+        auto y = integrations::geometry::extract_y(points);
+        // For now, use basic bar function - may need to be enhanced later
         return plotter::bar(y);
-    }
-
-    template <typename Numeric> inline void Plotter::xlim(Numeric left, Numeric right) {
-        select_figure();
-        plotter::xlim(left, right);
-    }
-
-    template <typename Numeric> inline void Plotter::ylim(Numeric bottom, Numeric top) {
-        select_figure();
-        plotter::ylim(bottom, top);
     }
 
     // ============ FIGURE MANAGEMENT IMPLEMENTATIONS ============
@@ -266,6 +314,28 @@ namespace plotter {
     inline void Plotter::save(const char *filename, int dpi) {
         select_figure();
         plotter::save(filename, dpi);
+    }
+
+    inline void Plotter::save(const char *filename, bool animation) {
+        if (animation && animation_mode_ && !animation_frames_.empty()) {
+            // Create GIF from captured frames
+            save_animated_gif(filename);
+        } else {
+            // Save current plot as static image
+            select_figure();
+            plotter::save(filename);
+        }
+    }
+
+    inline void Plotter::save(const char *filename, int dpi, bool animation) {
+        if (animation && animation_mode_ && !animation_frames_.empty()) {
+            // Create GIF from captured frames
+            save_animated_gif(filename);
+        } else {
+            // Save current plot as static image
+            select_figure();
+            plotter::save(filename, dpi);
+        }
     }
 
     inline void Plotter::clf() {
@@ -300,62 +370,125 @@ namespace plotter {
 
     inline void Plotter::close() { plotter::close(figure_num_); }
 
+    inline void Plotter::xlim(double left, double right) {
+        select_figure();
+        plotter::xlim(left, right);
+    }
+
+    inline void Plotter::ylim(double bottom, double top) {
+        select_figure();
+        plotter::ylim(bottom, top);
+    }
+
+    // ============ ANIMATION IMPLEMENTATIONS ============
+
+    /// Enable animation mode
+    inline void Plotter::enable_animation(int frame_duration_ms) {
+        animation_mode_ = true;
+        frame_duration_ms_ = frame_duration_ms;
+        animation_frames_.clear();
+    }
+
+    /// Disable animation mode
+    inline void Plotter::disable_animation() {
+        animation_mode_ = false;
+    }
+
+    /// Check if animation mode is enabled
+    inline bool Plotter::is_animation_enabled() const {
+        return animation_mode_;
+    }
+
+    /// Clear all captured frames
+    inline void Plotter::clear_frames() {
+        animation_frames_.clear();
+    }
+
+    /// Get number of captured frames
+    inline size_t Plotter::frame_count() const {
+        return animation_frames_.size();
+    }
+
+    /// Set frame duration for GIF animation
+    inline void Plotter::set_frame_duration(int duration_ms) {
+        frame_duration_ms_ = duration_ms;
+    }
+
+    /// Capture current plot as a frame (internal method)
+    inline void Plotter::capture_frame() {
+        if (!animation_mode_) return;
+        
+        // Generate a temporary filename for this frame
+        std::string temp_filename = "temp_frame_" + std::to_string(animation_frames_.size()) + ".png";
+        
+        // Save current plot as a temporary frame
+        select_figure();
+        plotter::save(temp_filename.c_str());
+        
+        // Store the filename for later GIF creation
+        animation_frames_.push_back(temp_filename);
+    }
+
+    /// Create animated GIF from captured frames (internal method)
+    inline void Plotter::save_animated_gif(const char *filename) {
+        if (animation_frames_.empty()) {
+            std::cerr << "Warning: No frames captured for animation. Save as static image instead." << std::endl;
+            select_figure();
+            plotter::save(filename);
+            return;
+        }
+
+        // Use Python/matplotlib to create GIF from frames
+        detail::_interpreter::get();
+        
+        // Create Python script to generate GIF
+        std::string python_script = R"(
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from PIL import Image
+import os
+
+# Load all frame images
+frames = []
+frame_files = [)";
+
+        // Add frame filenames to Python script
+        for (size_t i = 0; i < animation_frames_.size(); ++i) {
+            python_script += "'" + animation_frames_[i] + "'";
+            if (i < animation_frames_.size() - 1) python_script += ", ";
+        }
+
+        python_script += R"(]
+
+for frame_file in frame_files:
+    if os.path.exists(frame_file):
+        frames.append(Image.open(frame_file))
+
+# Create GIF
+if frames:
+    frames[0].save(')" + std::string(filename) + R"(', 
+                   save_all=True, 
+                   append_images=frames[1:], 
+                   duration=)" + std::to_string(frame_duration_ms_) + R"(, 
+                   loop=0)
+    print(f"Animated GIF saved as )" + std::string(filename) + R"(")
+    
+    # Clean up temporary frame files
+    for frame_file in frame_files:
+        if os.path.exists(frame_file):
+            os.remove(frame_file)
+else:
+    print("Error: No frames to create GIF")
+)";
+
+        // Execute Python script
+        PyRun_SimpleString(python_script.c_str());
+        
+        // Clear the frame list after creating GIF
+        animation_frames_.clear();
+    }
+
     // ============ CONCORD INTEGRATION IMPLEMENTATIONS ============
-
-    /// Plot points using Concord Point objects
-    inline bool Plotter::plot(const std::vector<concord::Point> &points) {
-        select_figure();
-        auto x = integrations::geometry::extract_x(points);
-        auto y = integrations::geometry::extract_y(points);
-        return plotter::plot(x, y);
-    }
-
-    /// Plot points with Pigment color
-    inline bool Plotter::plot(const std::vector<concord::Point> &points, const pigment::RGB &color) {
-        select_figure();
-        auto x = integrations::geometry::extract_x(points);
-        auto y = integrations::geometry::extract_y(points);
-        std::map<std::string, std::string> keywords;
-        keywords["color"] = integrations::color::to_matplotlib_color(color);
-        return plotter::plot(x, y, keywords);
-    }
-
-    /// Plot points with format string
-    inline bool Plotter::plot(const std::vector<concord::Point> &points, const char *format) {
-        select_figure();
-        auto x = integrations::geometry::extract_x(points);
-        auto y = integrations::geometry::extract_y(points);
-        return plotter::plot(x, y, std::string(format));
-    }
-
-    /// Scatter plot using Concord Points
-    inline bool Plotter::scatter(const std::vector<concord::Point> &points) {
-        select_figure();
-        auto x = integrations::geometry::extract_x(points);
-        auto y = integrations::geometry::extract_y(points);
-        return plotter::scatter(x, y);
-    }
-
-    /// Scatter plot using Concord Points with Pigment color
-    inline bool Plotter::scatter(const std::vector<concord::Point> &points, const pigment::RGB &color) {
-        select_figure();
-        auto x = integrations::geometry::extract_x(points);
-        auto y = integrations::geometry::extract_y(points);
-        std::map<std::string, std::string> keywords;
-        keywords["color"] = integrations::color::to_matplotlib_color(color);
-        return plotter::scatter(x, y, keywords);
-    }
-
-    /// Scatter plot using Concord Points with size and color
-    inline bool Plotter::scatter(const std::vector<concord::Point> &points, double s, const pigment::RGB &color) {
-        select_figure();
-        auto x = integrations::geometry::extract_x(points);
-        auto y = integrations::geometry::extract_y(points);
-        std::map<std::string, std::string> keywords;
-        keywords["s"] = std::to_string(s);
-        keywords["color"] = integrations::color::to_matplotlib_color(color);
-        return plotter::scatter(x, y, keywords);
-    }
 
     /// Plot a circle using Concord geometry
     inline bool Plotter::plot_circle(double center_x, double center_y, double radius, const pigment::RGB &color) {

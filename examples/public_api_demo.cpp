@@ -7,10 +7,14 @@ int main() {
 
     plotter::Plotter plt;
 
-    // Basic plotting
+    // Basic plotting using Concord Points
+    std::vector<concord::Point> basic_points;
     std::vector<double> x = {0, 1, 2, 3, 4};
     std::vector<double> y = {0, 1, 4, 9, 16};
-    plt.plot(x, y);
+    for (size_t i = 0; i < x.size(); ++i) {
+        basic_points.emplace_back(x[i], y[i]);
+    }
+    plt.plot(basic_points);
 
     // Concord and Pigment integration
     std::vector<concord::Point> points;

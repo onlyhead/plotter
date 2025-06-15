@@ -19,15 +19,10 @@
  * int main() {
  *     plotter::Plotter plt;
  *
- *     // Plot with traditional vectors
- *     std::vector<double> x = {1, 2, 3, 4};
- *     std::vector<double> y = {1, 4, 2, 3};
- *     plt.plot(x, y);
- *
- *     // Plot with Concord points and Pigment colors
+ *     // Plot with Concord points (z defaults to 0 if not specified)
  *     std::vector<concord::Point> points;
- *     points.emplace_back(1, 2, 0);
- *     points.emplace_back(2, 3, 0);
+ *     points.emplace_back(1, 2);    // z automatically set to 0
+ *     points.emplace_back(2, 3);    // z automatically set to 0
  *     plt.plot(points, pigment::RGB::red());
  *
  *     plt.save("output.png");

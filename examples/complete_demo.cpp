@@ -22,10 +22,13 @@ int main() {
         std::vector<double> x_vals, y_vals;
         for (int i = 0; i <= 50; ++i) {
             double x = i * 0.2;
-            x_vals.push_back(x);
-            y_vals.push_back(std::sin(x));
         }
-        plt.plot(x_vals, y_vals, "b-");
+        // Convert to Concord Points
+        std::vector<concord::Point> sine_points;
+        for (size_t i = 0; i < x_vals.size(); ++i) {
+            sine_points.emplace_back(x_vals[i], y_vals[i]);
+        }
+        plt.plot(sine_points, "b-");
 
         // Demo 2: Concord Point plotting
         std::cout << "2. Concord Point plotting..." << std::endl;

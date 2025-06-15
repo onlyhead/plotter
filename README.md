@@ -5,6 +5,9 @@ Plotter
 
 A modern C++ plotting library with integrated geometry and color management, built on top of matplotlib.
 
+**🎯 Now requires Concord Points for all coordinate data and Pigment for all colors!**
+**🎬 NEW: Animated GIF support for creating smooth animations!**
+
 Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/lava/matplotlib-cpp)
 
 ## Key Features
@@ -13,11 +16,11 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 - **Modular architecture** - Organized into logical components for better maintainability  
 - **Class-based interface** - Create multiple independent plot instances simultaneously
 - **Modern C++20** - Uses latest C++ features and best practices
-- **Integrated geometry** - Built-in support for Concord geometric primitives
-- **Advanced color management** - Pigment library integration for RGB, HSL, HSV color spaces
+- **Concord geometry integration** - All coordinates must use Concord Point objects
+- **Pigment color management** - All colors must use Pigment RGB, HSL, or HSV types
+- **🎬 Animated GIF support** - Create smooth animations with frame capture
 - **Python/matplotlib backend** - Leverages the power and flexibility of matplotlib
-- **Easy to use** - Simple API similar to matplotlib and Matlab
-- **Full backward compatibility** - Existing code continues to work unchanged
+- **Easy to use** - Simple API focused on geometric primitives and proper color management
 
 ---
 
@@ -29,8 +32,15 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 
 int main() {
     plotter::Plotter plt;
-    std::vector<int> data = {1, 3, 2, 4};
-    plt.plot(data);
+    
+    // Create points using Concord (z defaults to 0 automatically)
+    std::vector<concord::Point> points;
+    points.emplace_back(1, 3);  // Point(1, 3, 0)
+    points.emplace_back(2, 1);  // Point(2, 1, 0)
+    points.emplace_back(3, 4);  // Point(3, 4, 0)
+    points.emplace_back(4, 2);  // Point(4, 2, 0)
+    
+    plt.plot(points);
     plt.save("minimal.png");
     return 0;
 }
@@ -44,30 +54,144 @@ int main() {
 int main() {
     plotter::Plotter plt;
     
-    // Traditional plotting
-    std::vector<double> x, y;
+    // Create sine wave using Concord points
+    std::vector<concord::Point> sine_points;
     for (int i = 0; i <= 100; ++i) {
-        double t = i * 0.1;
-        x.push_back(t);
-        y.push_back(std::sin(t));
+        double x = i * 0.1;
+        double y = std::sin(x);
+        sine_points.emplace_back(x, y);  // z defaults to 0
     }
-    plt.plot(x, y, "b-");
     
-    // Geometry with Concord Points
-    std::vector<concord::Point> circle_points;
-    for (int i = 0; i <= 50; ++i) {
-        double angle = 2 * M_PI * i / 50.0;
-        circle_points.emplace_back(5 + 2*cos(angle), sin(angle), 0);
+    // Plot with Pigment color
+    plt.plot(sine_points, pigment::RGB::blue());
+    
+    // Create cosine wave
+    std::vector<concord::Point> cosine_points;
+    for (int i = 0; i <= 100; ++i) {
+        double x = i * 0.1;
+        double y = std::cos(x);
+        cosine_points.emplace_back(x, y);
     }
-    plt.plot(circle_points, pigment::RGB::red());
     
-    // Color management with Pigment
-    plt.plot_circle(8, 0, 0.5, pigment::HSL(240, 0.8, 0.6).toRGB());
+    // Plot with different Pigment color
+    plt.plot(cosine_points, pigment::RGB::red());
     
-    plt.title("Plotter with Concord Geometry & Pigment Colors");
-    plt.save("enhanced.png");
+    plt.title("Sine and Cosine with Concord Points");
+    plt.save("geometry_colors.png");
     return 0;
 }
+```
+
+### 🎬 NEW: Animated GIF Creation:
+```cpp
+#include <plotter.hpp>
+#include <cmath>
+
+int main() {
+    plotter::Plotter plt;
+    
+    // Enable animation mode with 200ms per frame
+    plt.enable_animation(200);
+    
+    plt.xlim(0, 10);
+    plt.ylim(-2, 2);
+    
+    // Create 20 frames of growing sine wave
+    for (int frame = 1; frame <= 20; ++frame) {
+        plt.clf();  // Clear previous frame
+        
+        std::vector<concord::Point> sine_points;
+        for (int i = 0; i <= frame * 5; ++i) {
+            double x = i * 0.1;
+            double y = std::sin(x);
+            sine_points.emplace_back(x, y);
+        }
+        
+        plt.plot(sine_points, pigment::RGB::blue());
+        plt.title("Growing Sine Wave Animation");
+        // Frame automatically captured when in animation mode
+    }
+    
+    // Save as animated GIF
+    plt.save("animated_sine.gif", true);  // animation=true
+    
+    // Also save final frame as static image
+    plt.save("final_frame.png", false);   // animation=false
+    
+    return 0;
+}
+```
+
+---
+
+## 🎬 Animation API Reference
+
+### Animation Control Methods
+
+```cpp
+// Enable animation mode with frame duration
+plt.enable_animation(200);              // 200ms per frame (default: 100ms)
+
+// Check animation status
+bool is_enabled = plt.is_animation_enabled();
+
+// Get frame count
+size_t frames = plt.frame_count();      // Number of captured frames
+
+// Clear all frames
+plt.clear_frames();                     // Remove all captured frames
+
+// Disable animation
+plt.disable_animation();                // Stop capturing frames
+
+// Set frame timing
+plt.set_frame_duration(150);            // 150ms per frame
+```
+
+### Save Methods with Animation Support
+
+```cpp
+// Save static image (default behavior)
+plt.save("plot.png");                   // Static PNG
+plt.save("plot.png", false);            // Explicitly static
+
+// Save animated GIF
+plt.save("animation.gif", true);        // Use captured frames for GIF
+
+// Save with custom DPI
+plt.save("plot.png", 300);              // 300 DPI static image
+plt.save("animation.gif", 300, true);   // 300 DPI animated GIF
+```
+
+### Animation Workflow
+
+1. **Enable Animation Mode**: `plt.enable_animation(duration_ms)`
+2. **Create Frames**: Each `plot()`, `scatter()`, `bar()` call captures a frame
+3. **Save GIF**: `plt.save("animation.gif", true)` creates animated GIF
+4. **Clean Up**: Frames are automatically cleared after GIF creation
+
+---
+
+## 🎯 Breaking Changes in v2.0
+
+### Coordinate System
+- ❌ **OLD**: `plot(std::vector<double> x, std::vector<double> y)`
+- ✅ **NEW**: `plot(std::vector<concord::Point> points)`
+
+### Color System  
+- ❌ **OLD**: String colors like `"red"`, `"blue"`
+- ✅ **NEW**: `pigment::RGB::red()`, `pigment::RGB::blue()`
+
+### Point Creation
+```cpp
+// ✅ Concord Points automatically set z=0 when omitted
+concord::Point p1(1.0, 2.0);           // Point(1.0, 2.0, 0.0)
+concord::Point p2(1.0, 2.0, 3.0);      // Point(1.0, 2.0, 3.0)
+
+// ✅ Easy vector creation
+std::vector<concord::Point> points;
+points.emplace_back(1, 2);              // z defaults to 0
+points.emplace_back(3, 4);              // z defaults to 0
 ```
 
 Build with:
@@ -79,7 +203,7 @@ make compile
 
 ![Minimal example](examples/minimal.png)
 
-### A more comprehensive example:
+### A more comprehensive example with Concord and Pigment:
 ```cpp
 #include <plotter.hpp>
 #include <cmath>
@@ -90,31 +214,30 @@ int main()
     // Create a plotter instance
     plotter::Plotter plt;
     
-    // Prepare data
-    int n = 5000;
-    std::vector<double> x(n), y(n), z(n), w(n, 2);
-    for(int i = 0; i < n; ++i) {
-        x[i] = i * i;
-        y[i] = sin(2 * M_PI * i / 360.0);
-        z[i] = log(i);
+    // Create points using Concord
+    std::vector<concord::Point> curve_points;
+    std::vector<concord::Point> line_points;
+    std::vector<concord::Point> log_points;
+    
+    for(int i = 1; i <= 100; ++i) {
+        double x = i * i;
+        curve_points.emplace_back(x, sin(2 * M_PI * i / 360.0));
+        line_points.emplace_back(x, 2.0);  // Constant line at y=2
+        log_points.emplace_back(x, log(i));
     }
     
-    // Plot line from given x and y data
-    plt.plot(x, y);
-    
-    // Plot a red dashed line
-    plt.plot(x, w, "r--");
-    
-    // Plot with custom legend label
-    plt.plot(x, z, "g-");
+    // Plot using Pigment colors
+    plt.plot(curve_points, pigment::RGB::blue());
+    plt.plot(line_points, pigment::RGB::red());
+    plt.plot(log_points, pigment::RGB::green());
     
     // Set axis limits
-    plt.xlim(0, 1000*1000);
+    plt.xlim(0, 10000);
     
     // Add labels and title
     plt.xlabel("X Values");
     plt.ylabel("Y Values");
-    plt.title("Sample figure");
+    plt.title("Sample figure with Concord Points and Pigment Colors");
     
     // Enable legend
     plt.legend();
@@ -443,9 +566,39 @@ This approach allows you to:
 
 ---
 
+## 📁 Example Files
+
+The `examples/` directory contains comprehensive demonstrations:
+
+### Core Examples:
+- **`simple_concord_example.cpp`** - Minimal example with Concord Points
+- **`basic.cpp`** - Basic plotting with multiple series
+- **`class_example.cpp`** - Multiple plotter instances
+- **`concord_points_demo.cpp`** - Comprehensive Concord Points showcase
+
+### Animation Examples:
+- **`simple_gif_demo.cpp`** - Basic 5-frame GIF animation
+- **`gif_animation_demo.cpp`** - Advanced 20-frame sine wave animation
+- **`animation.cpp`** - Real-time plotting animation
+
+### Advanced Examples:
+- **`modern.cpp`** - Parametric plots with heart shape
+- **`fill.cpp`** - Area fills and complex shapes
+- **`public_api_demo.cpp`** - Clean API demonstration
+
+Build and run any example:
+```bash
+make compile
+./build/simple_gif_demo        # Creates simple_animation.gif
+./build/gif_animation_demo     # Creates animated_sine_wave.gif
+./build/simple_concord_example # Creates simple_concord_example.png
+```
+
+---
+
 ## Installation
 
-Plotter works by wrapping the popular Python plotting library matplotlib. This means you need a working Python installation with development headers and NumPy.
+Plotter works by wrapping the popular Python plotting library matplotlib and integrates with Concord (geometry) and Pigment (colors). This means you need a working Python installation with development headers, NumPy, and PIL/Pillow for GIF creation.
 
 ### Using devbox (Recommended)
 
@@ -464,6 +617,10 @@ make compile
 
 The devbox.json file automatically provides:
 - Python 3.13 with development headers
+- NumPy and matplotlib for plotting
+- PIL/Pillow for GIF animation support
+- Concord library for geometric primitives
+- Pigment library for advanced color management
 - NumPy and matplotlib
 - CMake and build tools
 
@@ -473,13 +630,20 @@ If not using devbox, install the required dependencies:
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get install python3-dev python3-numpy python3-matplotlib cmake build-essential
+sudo apt-get install python3-dev python3-numpy python3-matplotlib python3-pil cmake build-essential
 ```
 
 **macOS:**
 ```bash
-brew install python numpy matplotlib cmake
+brew install python numpy matplotlib pillow cmake
 ```
+
+**Python packages (if not system-installed):**
+```bash
+pip install numpy matplotlib pillow
+```
+
+The library will automatically fetch Concord and Pigment dependencies via CMake FetchContent.
 
 ### CMake Configuration
 
