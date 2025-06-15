@@ -1,4 +1,4 @@
-#include <plotter/plotter.hpp>
+#include <plotter.hpp>
 
 int main() {
     plotter::Plotter plt;

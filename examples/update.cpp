@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <chrono>
 #include <cmath>
-#include <plotter/plotter.hpp>
+#include <plotter.hpp>
 
 using namespace plotter;
 

@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <iostream>
-#include <plotter/plotter.hpp>
+#include <plotter.hpp>
 
 int main() {
     // Create a plotter instance

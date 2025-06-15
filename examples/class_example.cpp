@@ -5,7 +5,7 @@
 #include <vector>
 
 // For demonstration purposes, let's show the concept with a mock interface
-// In the actual implementation, this would be: #include <plotter/plotter.hpp>
+// In the actual implementation, this would be: #include <plotter.hpp>
 
 namespace plotter {
     // This is a conceptual example showing how the class-based interface would work

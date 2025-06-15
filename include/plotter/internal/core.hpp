@@ -20,19 +20,6 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-#ifdef WITH_OPENCV
-#include <opencv2/opencv.hpp>
-
-/*
- * A bunch of constants were removed in OpenCV 4 in favour of enum classes, so
- * define the ones we need here.
- */
-#if CV_MAJOR_VERSION > 3
-#define CV_BGR2RGB cv::COLOR_BGR2RGB
-#define CV_BGRA2RGBA cv::COLOR_BGRA2RGBA
-#endif
-#endif // WITH_OPENCV
-
 #if PY_MAJOR_VERSION >= 3
 #define PyString_FromString PyUnicode_FromString
 #define PyInt_FromLong PyLong_FromLong
@@ -350,6 +337,23 @@ namespace plotter {
                     data[i * cols + j] = v[i][j];
                 }
             }
+
+            return array;
+        }
+
+        template <typename Numeric> PyObject *get_2darray(const std::vector<Numeric> &v, int rows, int cols) {
+            if (v.size() != static_cast<size_t>(rows * cols)) {
+                throw std::runtime_error("get_2darray: data size doesn't match dimensions");
+            }
+
+            npy_intp dims[] = {rows, cols};
+            PyObject *array = PyArray_SimpleNew(2, dims, select_npy_type<Numeric>::type);
+            if (!array) {
+                throw std::runtime_error("Could not create numpy 2D array");
+            }
+
+            void *data = PyArray_DATA((PyArrayObject *)array);
+            std::memcpy(data, v.data(), sizeof(Numeric) * v.size());
 
             return array;
         }

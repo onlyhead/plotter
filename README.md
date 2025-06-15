@@ -3,16 +3,18 @@
 Plotter
 ==
 
-A modular C++ plotting library built on top of matplotlib  with a modern and modular design.
+A modern C++ plotting library with integrated geometry and color management, built on top of matplotlib.
 
 Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/lava/matplotlib-cpp)
 
 ## Key Features
 
-- **Header-only library** - Easy integration, no separate compilation needed
+- **Header-only library** - Easy integration, just `#include <plotter.hpp>`
 - **Modular architecture** - Organized into logical components for better maintainability  
 - **Class-based interface** - Create multiple independent plot instances simultaneously
 - **Modern C++20** - Uses latest C++ features and best practices
+- **Integrated geometry** - Built-in support for Concord geometric primitives
+- **Advanced color management** - Pigment library integration for RGB, HSL, HSV color spaces
 - **Python/matplotlib backend** - Leverages the power and flexibility of matplotlib
 - **Easy to use** - Simple API similar to matplotlib and Matlab
 - **Full backward compatibility** - Existing code continues to work unchanged
@@ -23,13 +25,47 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 
 ### Complete minimal example:
 ```cpp
-#include "plotter/plotter.hpp"
+#include <plotter.hpp>
 
 int main() {
     plotter::Plotter plt;
     std::vector<int> data = {1, 3, 2, 4};
     plt.plot(data);
     plt.save("minimal.png");
+    return 0;
+}
+```
+
+### Enhanced example with geometry and colors:
+```cpp
+#include <plotter.hpp>
+#include <cmath>
+
+int main() {
+    plotter::Plotter plt;
+    
+    // Traditional plotting
+    std::vector<double> x, y;
+    for (int i = 0; i <= 100; ++i) {
+        double t = i * 0.1;
+        x.push_back(t);
+        y.push_back(std::sin(t));
+    }
+    plt.plot(x, y, "b-");
+    
+    // Geometry with Concord Points
+    std::vector<concord::Point> circle_points;
+    for (int i = 0; i <= 50; ++i) {
+        double angle = 2 * M_PI * i / 50.0;
+        circle_points.emplace_back(5 + 2*cos(angle), sin(angle), 0);
+    }
+    plt.plot(circle_points, pigment::RGB::red());
+    
+    // Color management with Pigment
+    plt.plot_circle(8, 0, 0.5, pigment::HSL(240, 0.8, 0.6).toRGB());
+    
+    plt.title("Plotter with Concord Geometry & Pigment Colors");
+    plt.save("enhanced.png");
     return 0;
 }
 ```
@@ -45,7 +81,7 @@ make compile
 
 ### A more comprehensive example:
 ```cpp
-#include "plotter/plotter.hpp"
+#include <plotter.hpp>
 #include <cmath>
 #include <vector>
 
@@ -96,8 +132,8 @@ int main()
 
 ### Modern C++20 syntactic sugar:
 ```cpp
+#include <plotter.hpp>
 #include <cmath>
-#include "plotter/plotter.hpp"
 
 using namespace std;
 
@@ -129,7 +165,7 @@ int main()
 
 ### XKCD-styled plots:
 ```cpp
-#include "plotter/plotter.hpp"
+#include <plotter.hpp>
 #include <vector>
 #include <cmath>
 
@@ -159,7 +195,7 @@ int main() {
 
 ### Vector field visualization:
 ```cpp
-#include "plotter/plotter.hpp"
+#include <plotter.hpp>
 
 int main()
 {
@@ -177,8 +213,6 @@ int main()
         }
     }
 
-    // Note: quiver function would need to be implemented in the class
-    // For now showing the concept with scatter plot
     plt.scatter(x, y);
     plt.show();
     return 0;
@@ -191,7 +225,7 @@ int main()
 
 ### 3D Surface plots:
 ```cpp
-#include "plotter/plotter.hpp"
+#include <plotter.hpp>
 
 int main()
 {
@@ -211,8 +245,6 @@ int main()
         z.push_back(z_row);
     }
 
-    // Note: plot_surface function would need to be implemented in the class
-    // For now showing the concept
     plt.show();
     return 0;
 }
@@ -224,20 +256,90 @@ int main()
 
 ---
 
+## Geometry & Color Features
+
+Plotter integrates **Concord** (geometry library) and **Pigment** (color library) for enhanced plotting capabilities:
+
+### Concord Geometry Integration
+
+Plot directly with geometric primitives:
+
+```cpp
+#include <plotter.hpp>
+
+// Plot using Concord Points
+std::vector<concord::Point> points;
+for (int i = 0; i <= 100; ++i) {
+    double x = i * 0.1;
+    points.emplace_back(x, std::sin(x), 0.0);
+}
+
+plotter::Plotter plt;
+plt.plot(points, pigment::RGB::red());
+
+// Generate geometric shapes
+plt.plot_circle(0.0, 0.0, 1.0, pigment::RGB::blue());
+plt.plot_rectangle(1.0, -0.5, 2.0, 1.0, pigment::RGB::green());
+```
+
+### Pigment Color Management
+
+Advanced color spaces and palette management:
+
+```cpp
+// Multiple color spaces
+pigment::RGB red_color("#FF0000");
+pigment::HSL purple_hsl(280, 0.8, 0.6);
+pigment::HSV bright_green(120, 1.0, 1.0);
+
+// Color palette management
+std::vector<pigment::RGB> custom_colors = {
+    pigment::RGB("#FF6B35"),  // Orange
+    pigment::RGB("#F7931E"),  // Golden
+    pigment::RGB("#FFD23F")   // Yellow
+};
+pigment::Palette palette(custom_colors);
+plt.set_color_palette(palette);
+
+// Automatic color cycling
+auto next_color = plt.get_next_color();
+plt.plot(data, next_color);
+```
+
+---
+
 ## Project Structure
 
-The library has been designed with a modular architecture for better maintainability:
+The library provides a clean, single-header interface with internal modularity:
 
 ```
-include/plotter/
-├── plotter.hpp     # Main header that includes all modules
-├── core.hpp        # Core functionality, Python interpreter setup
-├── figure.hpp      # Figure management (show, save, clf, etc.)
-├── axes.hpp        # Axes configuration (labels, limits, grid, etc.)
-├── plots.hpp       # Basic plotting functions (plot, contour, etc.)
-├── scatter.hpp     # Scatter plot functionality
-├── charts.hpp      # Bar charts, histograms, box plots
-└── image.hpp       # Image display and vector field plots
+include/
+├── plotter.hpp                 # Single public header - include this
+└── plotter/
+    ├── plotter.hpp             # Main implementation
+    └── internal/               # Internal modules (hidden from users)
+        ├── core.hpp            # Core functionality, Python interpreter setup
+        ├── figure.hpp          # Figure management (show, save, clf, etc.)
+        ├── axes.hpp            # Axes configuration (labels, limits, grid, etc.)
+        ├── plots.hpp           # Basic plotting functions (plot, contour, etc.)
+        ├── scatter.hpp         # Scatter plot functionality
+        ├── charts.hpp          # Bar charts, histograms, box plots
+        ├── image.hpp           # Image display and vector field plots
+        └── integrations.hpp    # Concord geometry & Pigment color utilities
+```
+
+### Public API
+
+Users only need to include the main header:
+
+```cpp
+#include <plotter.hpp>
+
+// Access to:
+// - plotter::Plotter class
+// - concord::Point for geometry
+// - pigment::RGB, pigment::HSL, pigment::HSV for colors
+// - pigment::Palette for color management
 ```
 
 ### Core Functionality (`core.hpp`)
@@ -285,7 +387,7 @@ include/plotter/
 The class-based interface allows you to create multiple independent plot instances that can be managed separately:
 
 ```cpp
-#include "plotter/plotter.hpp"
+#include <plotter.hpp>
 #include <cmath>
 #include <vector>
 
@@ -407,6 +509,8 @@ make compile
 - **Python 3** with development headers
 - **NumPy** for array operations  
 - **Matplotlib** for plotting backend
+- **Concord** for geometric primitives (automatically fetched)
+- **Pigment** for color management (automatically fetched)
 - **CMake 3.15+** for building
 - **C++20 compatible compiler**
 
@@ -420,11 +524,16 @@ This library started as a refactoring of matplotlib-cpp to address several issue
 - **Monolithic design**: matplotlib-cpp was a single 3000+ line header file
 - **Poor maintainability**: Hard to navigate and extend
 - **Lack of organization**: All functionality mixed together
+- **Limited geometry support**: No built-in geometric primitives
+- **Basic color management**: Limited color space support
 
 **Plotter improvements:**
 - ✅ **Modular design** - Logical separation of functionality
-- ✅ **Header-only** - Easy integration, no build complexity
+- ✅ **Header-only** - Easy integration, just include `plotter.hpp`
 - ✅ **Modern C++20** - Uses latest language features
+- ✅ **Integrated geometry** - Concord library for geometric operations
+- ✅ **Advanced colors** - Pigment library for RGB, HSL, HSV support
+- ✅ **Clean API** - Single header exposes only what you need
 - ✅ **Better documentation** - Clear API organization
 - ✅ **Maintainable** - Easy to understand and extend
 

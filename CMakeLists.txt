@@ -29,6 +29,14 @@ set(ext_deps)
 find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 list(APPEND ext_deps Python3::Python Python3::NumPy)
 
+FetchContent_Declare(concord GIT_REPOSITORY https://github.com/smolfetch/concord.git GIT_TAG 2.0.0)
+FetchContent_MakeAvailable(concord)
+list(APPEND ext_deps concord::concord)
+
+FetchContent_Declare(pigment GIT_REPOSITORY https://github.com/smolfetch/pigment.git GIT_TAG 0.3.0)
+FetchContent_MakeAvailable(pigment)
+list(APPEND ext_deps pigment::pigment)
+
 # --------------------------------------------------------------------------------------------------
 # ImGui Dependencies
 if(${project_name_upper}_ENABLE_IMGUI)
@@ -84,6 +92,9 @@ target_include_directories(${project_name} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+# Link the external dependencies to the interface library
+target_link_libraries(${project_name} INTERFACE ${ext_deps})
 
 install(
   DIRECTORY include/

@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
 
 #include <iostream>
-#include <plotter/plotter.hpp>
+#include <plotter.hpp>
 #include <string>
 namespace plt = plotter;
 

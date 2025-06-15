@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include <plotter/plotter.hpp>
+#include <plotter.hpp>
 
 using namespace plotter;
 using namespace std;
