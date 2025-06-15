@@ -12,9 +12,11 @@
 #include "internal/plots.hpp"
 #include "internal/scatter.hpp"
 
+#include <algorithm>
+#include <fstream>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace plotter {
 
@@ -31,8 +33,10 @@ namespace plotter {
 
         // Animation support
         bool animation_mode_;
-        std::vector<std::string> animation_frames_;  // Store frame data as base64 or file paths
-        int frame_duration_ms_;  // Duration of each frame in milliseconds
+
+        // Store frame filenames for GIF creation
+        std::vector<std::string> animation_frames_; // Store frame filenames
+        int frame_duration_ms_;                     // Duration of each frame in milliseconds
 
         /// Select this figure as current
         void select_figure();
@@ -223,7 +227,7 @@ namespace plotter {
         auto x = integrations::geometry::extract_x(points);
         auto y = integrations::geometry::extract_y(points);
         bool result = plotter::plot(x, y);
-        capture_frame();  // Capture frame if in animation mode
+        capture_frame(); // Capture frame if in animation mode
         return result;
     }
 
@@ -235,7 +239,7 @@ namespace plotter {
         std::map<std::string, std::string> keywords;
         keywords["color"] = integrations::color::to_matplotlib_color(color);
         bool result = plotter::plot(x, y, keywords);
-        capture_frame();  // Capture frame if in animation mode
+        capture_frame(); // Capture frame if in animation mode
         return result;
     }
 
@@ -245,7 +249,7 @@ namespace plotter {
         auto x = integrations::geometry::extract_x(points);
         auto y = integrations::geometry::extract_y(points);
         bool result = plotter::plot(x, y, std::string(format));
-        capture_frame();  // Capture frame if in animation mode
+        capture_frame(); // Capture frame if in animation mode
         return result;
     }
 
@@ -390,41 +394,32 @@ namespace plotter {
     }
 
     /// Disable animation mode
-    inline void Plotter::disable_animation() {
-        animation_mode_ = false;
-    }
+    inline void Plotter::disable_animation() { animation_mode_ = false; }
 
     /// Check if animation mode is enabled
-    inline bool Plotter::is_animation_enabled() const {
-        return animation_mode_;
-    }
+    inline bool Plotter::is_animation_enabled() const { return animation_mode_; }
 
     /// Clear all captured frames
-    inline void Plotter::clear_frames() {
-        animation_frames_.clear();
-    }
+    inline void Plotter::clear_frames() { animation_frames_.clear(); }
 
     /// Get number of captured frames
-    inline size_t Plotter::frame_count() const {
-        return animation_frames_.size();
-    }
+    inline size_t Plotter::frame_count() const { return animation_frames_.size(); }
 
     /// Set frame duration for GIF animation
-    inline void Plotter::set_frame_duration(int duration_ms) {
-        frame_duration_ms_ = duration_ms;
-    }
+    inline void Plotter::set_frame_duration(int duration_ms) { frame_duration_ms_ = duration_ms; }
 
     /// Capture current plot as a frame (internal method)
     inline void Plotter::capture_frame() {
-        if (!animation_mode_) return;
-        
+        if (!animation_mode_)
+            return;
+
         // Generate a temporary filename for this frame
         std::string temp_filename = "temp_frame_" + std::to_string(animation_frames_.size()) + ".png";
-        
+
         // Save current plot as a temporary frame
         select_figure();
         plotter::save(temp_filename.c_str());
-        
+
         // Store the filename for later GIF creation
         animation_frames_.push_back(temp_filename);
     }
@@ -438,57 +433,93 @@ namespace plotter {
             return;
         }
 
-        // Use Python/matplotlib to create GIF from frames
         detail::_interpreter::get();
-        
-        // Create Python script to generate GIF
+
+        // Use imageio or PIL to create GIF from frame files
         std::string python_script = R"(
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from PIL import Image
 import os
 
-# Load all frame images
-frames = []
-frame_files = [)";
+# Try to use imageio for GIF creation (preferred)
+try:
+    import imageio.v2 as iio
+    USE_IMAGEIO = True
+    print("Using imageio for GIF creation")
+except ImportError:
+    try:
+        from PIL import Image
+        USE_IMAGEIO = False
+        print("Using PIL for GIF creation")
+    except ImportError:
+        print("Error: Neither imageio nor PIL is available for GIF creation")
+        print("Please install: pip install imageio")
+        USE_IMAGEIO = None
+
+if USE_IMAGEIO is not None:
+    # Frame file list
+    frame_files = [)";
 
         // Add frame filenames to Python script
         for (size_t i = 0; i < animation_frames_.size(); ++i) {
             python_script += "'" + animation_frames_[i] + "'";
-            if (i < animation_frames_.size() - 1) python_script += ", ";
+            if (i < animation_frames_.size() - 1)
+                python_script += ", ";
         }
 
         python_script += R"(]
-
-for frame_file in frame_files:
-    if os.path.exists(frame_file):
-        frames.append(Image.open(frame_file))
-
-# Create GIF
-if frames:
-    frames[0].save(')" + std::string(filename) + R"(', 
-                   save_all=True, 
-                   append_images=frames[1:], 
-                   duration=)" + std::to_string(frame_duration_ms_) + R"(, 
-                   loop=0)
-    print(f"Animated GIF saved as )" + std::string(filename) + R"(")
     
-    # Clean up temporary frame files
-    for frame_file in frame_files:
-        if os.path.exists(frame_file):
-            os.remove(frame_file)
+    valid_frames = [f for f in frame_files if os.path.exists(f)]
+    print(f"Found {len(valid_frames)} valid frame files")
+    
+    if valid_frames:
+        if USE_IMAGEIO:
+            # Use imageio (simpler and more reliable)
+            frames = []
+            for frame_file in valid_frames:
+                frames.append(iio.imread(frame_file))
+            
+            # Save as GIF with correct duration (imageio expects seconds)  
+            duration_sec = )" +
+                         std::to_string(frame_duration_ms_ / 1000.0) + R"(
+            iio.mimsave(')" +
+                         std::string(filename) + R"(', frames, duration=duration_sec, loop=0)
+            print(f"GIF saved as )" +
+                         std::string(filename) + R"( with {len(frames)} frames, duration={duration_sec}s per frame")
+            
+        else:
+            # Use PIL as fallback
+            pil_frames = []
+            for frame_file in valid_frames:
+                pil_frames.append(Image.open(frame_file))
+            
+            if pil_frames:
+                pil_frames[0].save(')" +
+                         std::string(filename) + R"(', 
+                                 save_all=True, 
+                                 append_images=pil_frames[1:], 
+                                 duration=)" +
+                         std::to_string(frame_duration_ms_) + R"(, 
+                                 loop=0)
+                print(f"GIF saved as )" +
+                         std::string(filename) + R"( with {len(pil_frames)} frames")
+        
+        # Clean up temporary frame files
+        for frame_file in valid_frames:
+            try:
+                os.remove(frame_file)
+            except:
+                pass
+    else:
+        print("No valid frame files found for GIF creation")
 else:
-    print("Error: No frames to create GIF")
+    print("Cannot create GIF - no suitable library available")
 )";
 
         // Execute Python script
         PyRun_SimpleString(python_script.c_str());
-        
+
         // Clear the frame list after creating GIF
         animation_frames_.clear();
     }
-
-    // ============ CONCORD INTEGRATION IMPLEMENTATIONS ============
 
     /// Plot a circle using Concord geometry
     inline bool Plotter::plot_circle(double center_x, double center_y, double radius, const pigment::RGB &color) {

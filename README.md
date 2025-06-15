@@ -18,7 +18,7 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 - **Modern C++20** - Uses latest C++ features and best practices
 - **Concord geometry integration** - All coordinates must use Concord Point objects
 - **Pigment color management** - All colors must use Pigment RGB, HSL, or HSV types
-- **🎬 Animated GIF support** - Create smooth animations with frame capture
+- **🎬 Animated GIF support** - Create smooth animations using imageio or PIL for efficient GIF encoding
 - **Python/matplotlib backend** - Leverages the power and flexibility of matplotlib
 - **Easy to use** - Simple API focused on geometric primitives and proper color management
 
@@ -166,9 +166,11 @@ plt.save("animation.gif", 300, true);   // 300 DPI animated GIF
 ### Animation Workflow
 
 1. **Enable Animation Mode**: `plt.enable_animation(duration_ms)`
-2. **Create Frames**: Each `plot()`, `scatter()`, `bar()` call captures a frame
-3. **Save GIF**: `plt.save("animation.gif", true)` creates animated GIF
-4. **Clean Up**: Frames are automatically cleared after GIF creation
+2. **Create Frames**: Each `plot()`, `scatter()`, `bar()` call captures a frame as a temporary PNG
+3. **Save GIF**: `plt.save("animation.gif", true)` combines frames using imageio/PIL
+4. **Clean Up**: Temporary frame files are automatically removed after GIF creation
+
+**Technical Note**: The library captures each frame as a high-quality PNG, then uses Python's imageio (preferred) or PIL (fallback) to combine them into an optimized animated GIF. This approach ensures excellent quality while leveraging proven, well-tested libraries for GIF encoding.
 
 ---
 
@@ -598,7 +600,7 @@ make compile
 
 ## Installation
 
-Plotter works by wrapping the popular Python plotting library matplotlib and integrates with Concord (geometry) and Pigment (colors). This means you need a working Python installation with development headers, NumPy, and PIL/Pillow for GIF creation.
+Plotter works by wrapping the popular Python plotting library matplotlib and integrates with Concord (geometry) and Pigment (colors). This means you need a working Python installation with development headers and NumPy. **GIF animation uses imageio (preferred) or PIL as fallback - one of these is required for GIF creation.**
 
 ### Using devbox (Recommended)
 
@@ -618,10 +620,9 @@ make compile
 The devbox.json file automatically provides:
 - Python 3.13 with development headers
 - NumPy and matplotlib for plotting
-- PIL/Pillow for GIF animation support
+- **imageio for efficient GIF creation (preferred over PIL)**
 - Concord library for geometric primitives
 - Pigment library for advanced color management
-- NumPy and matplotlib
 - CMake and build tools
 
 ### Manual Installation
@@ -630,18 +631,23 @@ If not using devbox, install the required dependencies:
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get install python3-dev python3-numpy python3-matplotlib python3-pil cmake build-essential
-```
-
-**macOS:**
-```bash
-brew install python numpy matplotlib pillow cmake
+sudo apt-get install python3-dev python3-numpy python3-matplotlib cmake build-essential
+# For GIF support (choose one):
+pip install imageio          # Preferred
+# OR
+pip install pillow          # Alternative
 ```
 
 **Python packages (if not system-installed):**
 ```bash
-pip install numpy matplotlib pillow
+pip install numpy matplotlib imageio
 ```
+
+**For GIF animation support**, install one of:
+- `imageio` (preferred): `pip install imageio`
+- `pillow` (fallback): `pip install pillow`
+
+The library will automatically detect which is available and use imageio if present, falling back to PIL if needed.
 
 The library will automatically fetch Concord and Pigment dependencies via CMake FetchContent.
 
@@ -677,6 +683,8 @@ make compile
 - **Pigment** for color management (automatically fetched)
 - **CMake 3.15+** for building
 - **C++20 compatible compiler**
+
+**No additional dependencies needed for GIF animation** - handled entirely in C++!
 
 
 ---
