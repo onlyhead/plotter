@@ -63,7 +63,7 @@ int main() {
     }
     
     // Plot with Pigment color
-    plt.plot(sine_points, pigment::RGB::blue());
+    plt.plot(sine_points, pigment::color::blue);
     
     // Create cosine wave
     std::vector<concord::Point> cosine_points;
@@ -74,7 +74,7 @@ int main() {
     }
     
     // Plot with different Pigment color
-    plt.plot(cosine_points, pigment::RGB::red());
+    plt.plot(cosine_points, pigment::color::red);
     
     plt.title("Sine and Cosine with Concord Points");
     plt.save("geometry_colors.png");
@@ -107,7 +107,7 @@ int main() {
             sine_points.emplace_back(x, y);
         }
         
-        plt.plot(sine_points, pigment::RGB::blue());
+        plt.plot(sine_points, pigment::color::blue);
         plt.title("Growing Sine Wave Animation");
         // Frame automatically captured when in animation mode
     }
@@ -172,17 +172,6 @@ plt.save("animation.gif", 300, true);   // 300 DPI animated GIF
 
 **Technical Note**: The library captures each frame as a high-quality PNG, then uses Python's imageio (preferred) or PIL (fallback) to combine them into an optimized animated GIF. This approach ensures excellent quality while leveraging proven, well-tested libraries for GIF encoding.
 
----
-
-## 🎯 Breaking Changes in v2.0
-
-### Coordinate System
-- ❌ **OLD**: `plot(std::vector<double> x, std::vector<double> y)`
-- ✅ **NEW**: `plot(std::vector<concord::Point> points)`
-
-### Color System  
-- ❌ **OLD**: String colors like `"red"`, `"blue"`
-- ✅ **NEW**: `pigment::RGB::red()`, `pigment::RGB::blue()`
 
 ### Point Creation
 ```cpp
@@ -229,9 +218,9 @@ int main()
     }
     
     // Plot using Pigment colors
-    plt.plot(curve_points, pigment::RGB::blue());
-    plt.plot(line_points, pigment::RGB::red());
-    plt.plot(log_points, pigment::RGB::green());
+    plt.plot(curve_points, pigment::color::blue);
+    plt.plot(line_points, pigment::color::red);
+    plt.plot(log_points, pigment::color::green);
     
     // Set axis limits
     plt.xlim(0, 10000);
@@ -400,19 +389,34 @@ for (int i = 0; i <= 100; ++i) {
 }
 
 plotter::Plotter plt;
-plt.plot(points, pigment::RGB::red());
+plt.plot(points, pigment::color::red);
 
 // Generate geometric shapes
-plt.plot_circle(0.0, 0.0, 1.0, pigment::RGB::blue());
-plt.plot_rectangle(1.0, -0.5, 2.0, 1.0, pigment::RGB::green());
+plt.plot_circle(0.0, 0.0, 1.0, pigment::color::blue);
+plt.plot_rectangle(1.0, -0.5, 2.0, 1.0, pigment::color::green);
 ```
 
 ### Pigment Color Management
 
-Advanced color spaces and palette management:
+**Simple colors** - Over 100 predefined colors available:
 
 ```cpp
-// Multiple color spaces
+// Use predefined colors (100+ available including):
+// Basic: red, green, blue, yellow, orange, purple, pink, cyan, magenta, brown
+// Extended: forest_green, deep_sky_blue, orange_red, dark_violet, lime_green
+// Variants: light_blue, dark_red, pale_yellow, bright_green, etc.
+
+plt.plot(data1, pigment::color::red);
+plt.plot(data2, pigment::color::blue);
+plt.plot(data3, pigment::color::forest_green);
+plt.plot(data4, pigment::color::deep_sky_blue);
+plt.plot(data5, pigment::color::orange_red);
+```
+
+**Advanced color spaces** and custom colors:
+
+```cpp
+// Multiple color spaces for custom colors
 pigment::RGB red_color("#FF0000");
 pigment::HSL purple_hsl(280, 0.8, 0.6);
 pigment::HSV bright_green(120, 1.0, 1.0);
@@ -462,8 +466,9 @@ Users only need to include the main header:
 
 // Access to:
 // - plotter::Plotter class
-// - concord::Point for geometry
-// - pigment::RGB, pigment::HSL, pigment::HSV for colors
+// - concord::Point for geometry  
+// - pigment::color::<name> for 100+ predefined colors
+// - pigment::RGB, pigment::HSL, pigment::HSV for custom colors
 // - pigment::Palette for color management
 ```
 
