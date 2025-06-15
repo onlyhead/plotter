@@ -137,6 +137,10 @@ namespace plotter {
         /// Check if animation mode is enabled
         bool is_animation_enabled() const;
 
+        /// Manually capture the current plot as a frame
+        /// Use this after making multiple plot calls to create a single frame
+        void frame();
+
         /// Clear all captured frames
         void clear_frames();
 
@@ -227,7 +231,6 @@ namespace plotter {
         auto x = integrations::geometry::extract_x(points);
         auto y = integrations::geometry::extract_y(points);
         bool result = plotter::plot(x, y);
-        capture_frame(); // Capture frame if in animation mode
         return result;
     }
 
@@ -239,7 +242,6 @@ namespace plotter {
         std::map<std::string, std::string> keywords;
         keywords["color"] = integrations::color::to_matplotlib_color(color);
         bool result = plotter::plot(x, y, keywords);
-        capture_frame(); // Capture frame if in animation mode
         return result;
     }
 
@@ -249,7 +251,6 @@ namespace plotter {
         auto x = integrations::geometry::extract_x(points);
         auto y = integrations::geometry::extract_y(points);
         bool result = plotter::plot(x, y, std::string(format));
-        capture_frame(); // Capture frame if in animation mode
         return result;
     }
 
@@ -407,6 +408,9 @@ namespace plotter {
 
     /// Set frame duration for GIF animation
     inline void Plotter::set_frame_duration(int duration_ms) { frame_duration_ms_ = duration_ms; }
+
+    /// Manually capture the current plot as a frame
+    inline void Plotter::frame() { capture_frame(); }
 
     /// Capture current plot as a frame (internal method)
     inline void Plotter::capture_frame() {

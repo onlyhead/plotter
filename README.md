@@ -18,7 +18,7 @@ Hugely inspired and initially copy/fork of [matplotlibcpp](https://github.com/la
 - **Modern C++20** - Uses latest C++ features and best practices
 - **Concord geometry integration** - All coordinates must use Concord Point objects
 - **Pigment color management** - All colors must use Pigment RGB, HSL, or HSV types
-- **🎬 Animated GIF support** - Create smooth animations using imageio or PIL for efficient GIF encoding
+- **🎬 Animated GIF support** - Create smooth animations using imageio for efficient GIF encoding
 - **Python/matplotlib backend** - Leverages the power and flexibility of matplotlib
 - **Easy to use** - Simple API focused on geometric primitives and proper color management
 
@@ -135,6 +135,9 @@ plt.enable_animation(200);              // 200ms per frame (default: 100ms)
 // Check animation status
 bool is_enabled = plt.is_animation_enabled();
 
+// Manually capture frame (NEW!)
+plt.frame();                           // Capture current plot as one frame
+
 // Get frame count
 size_t frames = plt.frame_count();      // Number of captured frames
 
@@ -165,12 +168,37 @@ plt.save("animation.gif", 300, true);   // 300 DPI animated GIF
 
 ### Animation Workflow
 
+**Traditional Auto-Capture (Simple):**
 1. **Enable Animation Mode**: `plt.enable_animation(duration_ms)`
-2. **Create Frames**: Each `plot()`, `scatter()`, `bar()` call captures a frame as a temporary PNG
+2. **Create Frames**: Each `plot()`, `scatter()`, `bar()` call automatically captures a frame
 3. **Save GIF**: `plt.save("animation.gif", true)` combines frames using imageio/PIL
-4. **Clean Up**: Temporary frame files are automatically removed after GIF creation
 
-**Technical Note**: The library captures each frame as a high-quality PNG, then uses Python's imageio (preferred) or PIL (fallback) to combine them into an optimized animated GIF. This approach ensures excellent quality while leveraging proven, well-tested libraries for GIF encoding.
+**Manual Frame Capture (Advanced - NEW!):**
+1. **Enable Animation Mode**: `plt.enable_animation(duration_ms)`
+2. **Make Multiple Plots**: Call `plot()`, `scatter()`, `bar()`, etc. multiple times
+3. **Capture Frame**: Call `plt.frame()` to capture all plots as a single frame
+4. **Repeat**: Continue plotting and calling `plt.frame()` for each desired frame
+5. **Save GIF**: `plt.save("animation.gif", true)` combines frames
+
+**Example - Batch Plotting:**
+```cpp
+plt.enable_animation(500);
+
+for (int frame = 0; frame < 10; ++frame) {
+    plt.clf();  // Clear previous frame
+    
+    // Plot multiple elements for this frame
+    for (int i = 0; i < 100; ++i) {
+        plt.plot_rectangle(i * 0.1, i * 0.1, 0.5, 0.5, color);
+    }
+    
+    plt.frame();  // Capture all 100 rectangles as ONE frame
+}
+
+plt.save("grid_animation.gif", true);
+```
+
+**Technical Note**: The library captures each frame as a high-quality PNG, then uses Python's imageio (preferred) or PIL (fallback) to combine them into an optimized animated GIF. Manual frame capture prevents creating thousands of unwanted frames when plotting grids or complex scenes.
 
 
 ### Point Creation
@@ -586,6 +614,7 @@ The `examples/` directory contains comprehensive demonstrations:
 ### Animation Examples:
 - **`simple_gif_demo.cpp`** - Basic 5-frame GIF animation
 - **`gif_animation_demo.cpp`** - Advanced 20-frame sine wave animation
+- **`batch_frame_demo.cpp`** - Demonstrates manual frame capture for batch plotting
 - **`animation.cpp`** - Real-time plotting animation
 
 ### Advanced Examples:
@@ -598,6 +627,7 @@ Build and run any example:
 make compile
 ./build/simple_gif_demo        # Creates simple_animation.gif
 ./build/gif_animation_demo     # Creates animated_sine_wave.gif
+./build/batch_frame_demo       # Creates batch_frame_demo.gif
 ./build/simple_concord_example # Creates simple_concord_example.png
 ```
 

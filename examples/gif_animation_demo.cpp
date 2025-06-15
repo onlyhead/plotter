@@ -46,6 +46,9 @@ int main() {
         std::string frame_title = "Animated Sine Wave - Frame " + std::to_string(frame);
         plt.title(frame_title.c_str());
 
+        // Manually capture this frame after all plot operations
+        plt.frame();
+
         std::cout << "Captured frame " << frame << "/" << 20 << std::endl;
     }
 
