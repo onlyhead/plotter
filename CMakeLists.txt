@@ -15,6 +15,7 @@ set(params
     -Wno-unused-variable
     -Wno-unused-parameter
     -Wno-deprecated-declarations
+    -Wno-missing-field-initializers
 )
 
 string(TOUPPER ${project_name} project_name_upper)
@@ -127,7 +128,7 @@ export(EXPORT ${project_name}Targets
 
 # --------------------------------------------------------------------------------------------------
 if(${project_name_upper}_BUILD_EXAMPLES)
-  file(GLOB exe examples/*.cpp)
+  file(GLOB exe examples/canvas/*.cpp)
   # ----------------------------------------------
   set(exec_names)
   foreach(src_file IN LISTS exe)
