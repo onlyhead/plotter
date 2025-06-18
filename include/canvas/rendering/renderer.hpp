@@ -2,6 +2,7 @@
 
 #include "../core/subplot.hpp"
 #include "../core/types.hpp"
+#include "../utils/text_renderer.hpp"
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -51,22 +52,29 @@ namespace plotter {
             }
         }
 
-        void render_subplot(Subplot &subplot) {
+        void render_subplot(Subplot &subplot, canvas::TextRenderer &text_renderer) {
             if (subplot.operations.empty())
                 return;
 
-            // Find data bounds for this subplot
-            double xmin = subplot.operations[0].xs[0], xmax = xmin;
-            double ymin = subplot.operations[0].ys[0], ymax = ymin;
+            // Find data bounds for this subplot (only for PLOT operations)
+            double xmin = 0, xmax = 1, ymin = 0, ymax = 1;
+            bool has_plot_data = false;
 
             for (auto &op : subplot.operations) {
-                for (double x : op.xs) {
-                    xmin = std::min(xmin, x);
-                    xmax = std::max(xmax, x);
-                }
-                for (double y : op.ys) {
-                    ymin = std::min(ymin, y);
-                    ymax = std::max(ymax, y);
+                if (op.type == OperationType::PLOT && !op.xs.empty() && !op.ys.empty()) {
+                    if (!has_plot_data) {
+                        xmin = xmax = op.xs[0];
+                        ymin = ymax = op.ys[0];
+                        has_plot_data = true;
+                    }
+                    for (double x : op.xs) {
+                        xmin = std::min(xmin, x);
+                        xmax = std::max(xmax, x);
+                    }
+                    for (double y : op.ys) {
+                        ymin = std::min(ymin, y);
+                        ymax = std::max(ymax, y);
+                    }
                 }
             }
 
@@ -81,16 +89,22 @@ namespace plotter {
             subplot.y_min = ymin;
             subplot.y_max = ymax;
 
-            // Plot each operation within the subplot bounds
+            // Process each operation within the subplot bounds
             for (auto &op : subplot.operations) {
-                std::vector<std::pair<double, double>> pts;
-                pts.reserve(op.xs.size());
-                for (size_t i = 0; i < op.xs.size(); ++i) {
-                    double nx = (op.xs[i] - xmin) / (xmax - xmin) * (subplot.width - 1) + subplot.x_offset;
-                    double ny = (op.ys[i] - ymin) / (ymax - ymin) * (subplot.height - 1) + subplot.y_offset;
-                    pts.emplace_back(nx, subplot.y_offset + subplot.height - 1 - (ny - subplot.y_offset));
+                if (op.type == OperationType::PLOT) {
+                    // Handle plot operations
+                    std::vector<std::pair<double, double>> pts;
+                    pts.reserve(op.xs.size());
+                    for (size_t i = 0; i < op.xs.size(); ++i) {
+                        double nx = (op.xs[i] - xmin) / (xmax - xmin) * (subplot.width - 1) + subplot.x_offset;
+                        double ny = (op.ys[i] - ymin) / (ymax - ymin) * (subplot.height - 1) + subplot.y_offset;
+                        pts.emplace_back(nx, subplot.y_offset + subplot.height - 1 - (ny - subplot.y_offset));
+                    }
+                    draw_polyline_clipped(pts, op.c, subplot);
+                } else if (op.type == OperationType::TEXT) {
+                    // Handle text operations
+                    render_text_operation(op, subplot, xmin, xmax, ymin, ymax, text_renderer);
                 }
-                draw_polyline_clipped(pts, op.c, subplot);
             }
         }
 
@@ -196,6 +210,34 @@ namespace plotter {
                     code1 = compute_code(x1, y1);
                 }
             }
+        }
+
+        void render_text_operation(const Operation &op, const Subplot &subplot, double xmin, double xmax, double ymin,
+                                   double ymax, canvas::TextRenderer &text_renderer) {
+            int pixel_x, pixel_y;
+
+            if (op.use_pixel_coords) {
+                // Use pixel coordinates directly
+                pixel_x = static_cast<int>(op.x);
+                pixel_y = static_cast<int>(op.y);
+            } else {
+                // Convert data coordinates to pixel coordinates
+                double nx = (op.x - xmin) / (xmax - xmin) * (subplot.width - 1) + subplot.x_offset;
+                double ny = (op.y - ymin) / (ymax - ymin) * (subplot.height - 1) + subplot.y_offset;
+                pixel_x = static_cast<int>(nx);
+                pixel_y = static_cast<int>(subplot.y_offset + subplot.height - 1 - (ny - subplot.y_offset));
+            }
+
+            // Create text style from the operation data
+            canvas::TextStyle style;
+            style.color = op.c;
+            style.font_size = op.font_size;
+            style.align = op.text_align;
+            style.baseline = op.text_baseline;
+
+            // Use the passed text renderer with style and font from operation
+            text_renderer.render_text(pixels_, width_, height_, op.text, static_cast<double>(pixel_x),
+                                      static_cast<double>(pixel_y), style, op.font_name);
         }
     };
 

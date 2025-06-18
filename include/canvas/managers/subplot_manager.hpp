@@ -69,6 +69,22 @@ namespace plotter {
                 subplot.operations.clear();
             }
         }
+
+        // Coordinate conversion methods
+        std::pair<int, int> normalize_to_pixel(double x, double y, const Subplot &subplot) {
+            // Convert normalized coordinates (0-1) to pixel coordinates within subplot bounds
+            int pixel_x = static_cast<int>(subplot.x_offset + x * subplot.width);
+            int pixel_y =
+                static_cast<int>(subplot.y_offset + (1.0 - y) * subplot.height); // Flip Y for screen coordinates
+            return {pixel_x, pixel_y};
+        }
+
+        std::pair<double, double> pixel_to_normalize(int pixel_x, int pixel_y, const Subplot &subplot) {
+            // Convert pixel coordinates to normalized coordinates (0-1) within subplot
+            double x = static_cast<double>(pixel_x - subplot.x_offset) / subplot.width;
+            double y = 1.0 - static_cast<double>(pixel_y - subplot.y_offset) / subplot.height; // Flip Y back
+            return {x, y};
+        }
     };
 
 } // namespace plotter

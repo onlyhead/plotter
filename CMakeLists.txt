@@ -30,7 +30,7 @@ set(ext_deps)
 find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 list(APPEND ext_deps Python3::Python Python3::NumPy)
 
-FetchContent_Declare(concord GIT_REPOSITORY https://github.com/smolfetch/concord.git GIT_TAG 2.0.1)
+FetchContent_Declare(concord GIT_REPOSITORY https://github.com/smolfetch/concord.git GIT_TAG 2.0.3)
 FetchContent_MakeAvailable(concord)
 list(APPEND ext_deps concord::concord)
 
