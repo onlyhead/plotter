@@ -128,7 +128,7 @@ export(EXPORT ${project_name}Targets
 
 # --------------------------------------------------------------------------------------------------
 if(${project_name_upper}_BUILD_EXAMPLES)
-  file(GLOB exe examples/canvas/*.cpp)
+  file(GLOB exe examples/matplotlib/*.cpp)
   # ----------------------------------------------
   set(exec_names)
   foreach(src_file IN LISTS exe)
