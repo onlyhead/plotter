@@ -70,6 +70,9 @@ namespace plotter {
 
             // Set initial background
             renderer_->set_background_color(theme_manager_.get_background_color());
+
+            // Try to load Ubuntu font as default, fallback to bitmap if not available
+            initialize_default_font();
         }
 
         // Theme management (delegates to ThemeManager)
@@ -105,7 +108,10 @@ namespace plotter {
         void set_vibrant_palette(size_t count = 8) { theme_manager_.set_vibrant_palette(count); }
 
         // Subplot management (delegates to SubplotManager)
-        void create_subplots(int rows, int cols) { subplot_manager_.create_subplots(rows, cols); }
+        void create_subplots(int rows, int cols) {
+            update_subplot_layout();
+            subplot_manager_.create_subplots(rows, cols);
+        }
 
         void subplot(int row, int col) { subplot_manager_.set_current_subplot(row, col); }
 
@@ -169,25 +175,77 @@ namespace plotter {
         // Infrastructure methods for future features
         void set_title(const std::string &title) { subplot_manager_.get_current_subplot().title = title; }
 
-        void set_canvas_title(const std::string &title) { canvas_title_ = title; }
+        void set_canvas_title(const std::string &title) {
+            canvas_title_ = title;
+            update_subplot_layout();
+        }
 
-        void set_xlabel(const std::string &xlabel) { subplot_manager_.get_current_subplot().xlabel = xlabel; }
+        void set_xlabel(const std::string &xlabel) { 
+            Subplot &subplot = subplot_manager_.get_current_subplot();
+            subplot.xlabel = xlabel; 
+            subplot.x_axis.label = xlabel;
+        }
 
-        void set_ylabel(const std::string &ylabel) { subplot_manager_.get_current_subplot().ylabel = ylabel; }
+        void set_ylabel(const std::string &ylabel) { 
+            Subplot &subplot = subplot_manager_.get_current_subplot();
+            subplot.ylabel = ylabel; 
+            subplot.y_axis.label = ylabel;
+        }
 
         void set_xlim(double xmin, double xmax) {
             Subplot &subplot = subplot_manager_.get_current_subplot();
             subplot.x_min = xmin;
             subplot.x_max = xmax;
+            // Override auto-scaling when manual limits are set
+            subplot.x_axis.auto_scale = false;
+            subplot.x_axis.min_value = xmin;
+            subplot.x_axis.max_value = xmax;
         }
 
         void set_ylim(double ymin, double ymax) {
             Subplot &subplot = subplot_manager_.get_current_subplot();
             subplot.y_min = ymin;
             subplot.y_max = ymax;
+            // Override auto-scaling when manual limits are set
+            subplot.y_axis.auto_scale = false;
+            subplot.y_axis.min_value = ymin;
+            subplot.y_axis.max_value = ymax;
         }
 
         void show_grid(bool show = true) { subplot_manager_.get_current_subplot().show_grid = show; }
+
+        // Axis configuration methods
+        void show_axes(bool show_x = true, bool show_y = true) {
+            Subplot &subplot = subplot_manager_.get_current_subplot();
+            subplot.x_axis.show_axis = show_x;
+            subplot.y_axis.show_axis = show_y;
+        }
+
+        void set_x_axis_config(bool auto_scale = true, double min_val = 0.0, double max_val = 1.0, int num_ticks = 5) {
+            Subplot &subplot = subplot_manager_.get_current_subplot();
+            subplot.x_axis.auto_scale = auto_scale;
+            subplot.x_axis.min_value = min_val;
+            subplot.x_axis.max_value = max_val;
+            subplot.x_axis.num_ticks = num_ticks;
+        }
+
+        void set_y_axis_config(bool auto_scale = true, double min_val = 0.0, double max_val = 1.0, int num_ticks = 5) {
+            Subplot &subplot = subplot_manager_.get_current_subplot();
+            subplot.y_axis.auto_scale = auto_scale;
+            subplot.y_axis.min_value = min_val;
+            subplot.y_axis.max_value = max_val;
+            subplot.y_axis.num_ticks = num_ticks;
+        }
+
+        void set_axis_colors(const Color &axis_color, const Color &tick_color, const Color &label_color) {
+            Subplot &subplot = subplot_manager_.get_current_subplot();
+            subplot.x_axis.axis_color = axis_color;
+            subplot.x_axis.tick_color = tick_color;
+            subplot.x_axis.label_color = label_color;
+            subplot.y_axis.axis_color = axis_color;
+            subplot.y_axis.tick_color = tick_color;
+            subplot.y_axis.label_color = label_color;
+        }
 
         // Text rendering methods
         void draw_text(double x, double y, const std::string &text,
@@ -352,11 +410,12 @@ namespace plotter {
                 title_style.color = theme_manager_.get_theme().text_color;
                 title_style.font_size = 20; // Larger font for canvas title
                 title_style.align = canvas::TextAlign::CENTER;
-                title_style.baseline = canvas::TextBaseline::TOP;
+                title_style.baseline = canvas::TextBaseline::MIDDLE;
 
-                // Position title at top center of canvas
+                // Position title in the reserved space at top
                 int title_x = width / 2;
-                int title_y = 10; // Small margin from top
+                int title_height = static_cast<int>(text_renderer_.text_height(title_style, default_font_name_));
+                int title_y = (title_height + 20) / 2; // Center in the reserved space
 
                 text_renderer_.render_text(pixels, width, height, canvas_title_, static_cast<double>(title_x),
                                            static_cast<double>(title_y), title_style, default_font_name_);
@@ -369,11 +428,71 @@ namespace plotter {
 
             // Render each subplot
             for (auto &subplot : subplot_manager_.get_all_subplots()) {
-                renderer_->render_subplot(subplot, text_renderer_);
+                // Make a copy of subplot for rendering with adjusted dimensions
+                Subplot render_subplot = subplot;
+                
+                // Adjust the copy for plot rendering (reserve space for axes)
+                if (subplot.x_axis.show_axis || subplot.y_axis.show_axis) {
+                    int left_margin = subplot.y_axis.show_axis ? 60 : 10;
+                    int bottom_margin = subplot.x_axis.show_axis ? 40 : 10;
+                    int right_margin = 10;
+                    int top_margin = 10;
+                    
+                    render_subplot.x_offset = subplot.x_offset + left_margin;
+                    render_subplot.y_offset = subplot.y_offset + top_margin;
+                    render_subplot.width = subplot.width - left_margin - right_margin;
+                    render_subplot.height = subplot.height - top_margin - bottom_margin;
+                }
+                
+                // First render the plot data within the adjusted subplot
+                renderer_->render_subplot(render_subplot, text_renderer_);
+                
+                // Then render axes OVER the figure (so they're visible on top)
+                renderer_->render_axes(subplot, text_renderer_, theme_manager_.get_theme().text_color);
             }
         }
 
       private:
+        void update_subplot_layout() {
+            int title_height = 0;
+            int title_padding = 20; // Padding above and below title
+
+            if (!canvas_title_.empty()) {
+                // Calculate space needed for canvas title
+                canvas::TextStyle title_style;
+                title_style.font_size = 20;
+                title_height = static_cast<int>(text_renderer_.text_height(title_style, default_font_name_));
+                title_height += title_padding; // Add padding
+            }
+
+            // Update subplot manager with adjusted dimensions
+            subplot_manager_.set_canvas_dimensions(width, height - title_height, 0, title_height);
+        }
+
+        void initialize_default_font() {
+            // List of Ubuntu font paths to try, in order of preference
+            std::vector<std::string> ubuntu_font_paths = {
+                "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+                "/usr/share/fonts/truetype/ubuntu/Ubuntu-Regular.ttf",
+                "/System/Library/Fonts/Helvetica.ttc",             // macOS fallback
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", // Debian/Ubuntu fallback
+                "/usr/share/fonts/TTF/DejaVuSans.ttf",             // Arch Linux fallback
+            };
+
+            // Try to load Ubuntu font
+            for (const auto &font_path : ubuntu_font_paths) {
+                if (text_renderer_.load_font("ubuntu", font_path)) {
+                    default_font_name_ = "ubuntu";
+                    text_renderer_.set_default_font("ubuntu");
+                    std::cout << "Loaded font: " << font_path << std::endl;
+                    return;
+                }
+            }
+
+            // If no TrueType font found, use bitmap fallback
+            default_font_name_ = ""; // Empty string means bitmap fallback
+            std::cout << "No TrueType font found, using bitmap fallback" << std::endl;
+        }
     };
 
 } // namespace plotter

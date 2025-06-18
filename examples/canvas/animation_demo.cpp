@@ -13,6 +13,11 @@ int main() {
     // Set canvas title
     canvas.set_canvas_title("Animated Wave Functions");
 
+    // Enable axes for better visualization
+    canvas.set_xlabel("Time");
+    canvas.set_ylabel("Amplitude");
+    canvas.show_axes(true, true);
+
     // Generate data for animation
     std::vector<double> x;
     for (int i = 0; i < 100; ++i) {

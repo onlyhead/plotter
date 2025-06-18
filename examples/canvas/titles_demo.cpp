@@ -7,7 +7,7 @@ int main() {
     std::cout << "=== Canvas Titles and Labels Demo ===" << std::endl;
 
     // Create canvas
-    plotter::Canvas canvas(800, 600, false);
+    plotter::Canvas canvas(1200, 1000, false);
     canvas.set_light_theme();
 
     // Create a 2x2 subplot grid
@@ -31,6 +31,7 @@ int main() {
     canvas.set_title("Sine Wave Function");
     canvas.set_xlabel("Time (seconds)");
     canvas.set_ylabel("Amplitude");
+    canvas.show_axes(true, true); // Enable axes
     canvas.plot(x, y_sin, {255, 0, 0, 255});
 
     // Plot 2: Longer title with styling
@@ -38,6 +39,7 @@ int main() {
     canvas.set_title("Cosine Wave with Phase Shift");
     canvas.set_xlabel("Time");
     canvas.set_ylabel("Value");
+    canvas.show_axes(true, true); // Enable axes
     canvas.plot(x, y_cos, {0, 255, 0, 255});
 
     // Plot 3: Mathematical notation in title
@@ -45,6 +47,7 @@ int main() {
     canvas.set_title("Exponential Decay: y = e^(-0.2x)");
     canvas.set_xlabel("x");
     canvas.set_ylabel("y = e^(-0.2x)");
+    canvas.show_axes(true, true); // Enable axes
     canvas.plot(x, y_exp, {0, 0, 255, 255});
 
     // Plot 4: Longer descriptive title
@@ -52,6 +55,7 @@ int main() {
     canvas.set_title("Natural Logarithm Growth");
     canvas.set_xlabel("Input Value");
     canvas.set_ylabel("ln(x + 1)");
+    canvas.show_axes(true, true); // Enable axes
     canvas.plot(x, y_log, {255, 165, 0, 255});
 
     // Set an overall canvas title

@@ -18,7 +18,9 @@ namespace plotter {
         SubplotManager(int width, int height)
             : width_(width), height_(height), rows_(1), cols_(1), current_subplot_(0, 0) {}
 
-        void create_subplots(int rows, int cols) {
+        void create_subplots(int rows, int cols) { create_subplots_with_offset(rows, cols, 0, 0); }
+
+        void create_subplots_with_offset(int rows, int cols, int x_offset, int y_offset) {
             rows_ = rows;
             cols_ = cols;
             subplots_.clear();
@@ -28,9 +30,9 @@ namespace plotter {
 
             for (int r = 0; r < rows; ++r) {
                 for (int c = 0; c < cols; ++c) {
-                    int x_offset = c * subplot_width;
-                    int y_offset = r * subplot_height;
-                    subplots_.emplace_back(r, c, x_offset, y_offset, subplot_width, subplot_height);
+                    int subplot_x_offset = c * subplot_width + x_offset;
+                    int subplot_y_offset = r * subplot_height + y_offset;
+                    subplots_.emplace_back(r, c, subplot_x_offset, subplot_y_offset, subplot_width, subplot_height);
                 }
             }
 
@@ -67,6 +69,18 @@ namespace plotter {
         void clear_all_operations() {
             for (auto &subplot : subplots_) {
                 subplot.operations.clear();
+            }
+        }
+
+        void set_canvas_dimensions(int canvas_width, int canvas_height, int x_offset = 0, int y_offset = 0) {
+            width_ = canvas_width;
+            height_ = canvas_height;
+
+            // If subplots exist, recreate them with new dimensions
+            if (!subplots_.empty()) {
+                int old_rows = rows_;
+                int old_cols = cols_;
+                create_subplots_with_offset(old_rows, old_cols, x_offset, y_offset);
             }
         }
 

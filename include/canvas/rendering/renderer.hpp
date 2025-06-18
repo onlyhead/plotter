@@ -5,6 +5,7 @@
 #include "../utils/text_renderer.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <vector>
 
 namespace plotter {
@@ -105,6 +106,30 @@ namespace plotter {
                     // Handle text operations
                     render_text_operation(op, subplot, xmin, xmax, ymin, ymax, text_renderer);
                 }
+            }
+        }
+
+        void render_axes(Subplot &subplot, canvas::TextRenderer &text_renderer, const Color &theme_text_color) {
+            // Reserve space for axes (margins)
+            int left_margin = 60;   // Space for Y-axis labels
+            int bottom_margin = 40; // Space for X-axis labels
+            int right_margin = 10;  // Small margin
+            int top_margin = 10;    // Small margin
+
+            // Calculate adjusted subplot drawing area to account for axes
+            int plot_x = subplot.x_offset + left_margin;
+            int plot_y = subplot.y_offset + top_margin;
+            int plot_width = subplot.width - left_margin - right_margin;
+            int plot_height = subplot.height - top_margin - bottom_margin;
+
+            // Draw X-axis
+            if (subplot.x_axis.show_axis) {
+                render_x_axis(subplot, text_renderer, plot_x, plot_y + plot_height, plot_width, theme_text_color);
+            }
+
+            // Draw Y-axis
+            if (subplot.y_axis.show_axis) {
+                render_y_axis(subplot, text_renderer, plot_x, plot_y, plot_height, theme_text_color);
             }
         }
 
@@ -238,6 +263,145 @@ namespace plotter {
             // Use the passed text renderer with style and font from operation
             text_renderer.render_text(pixels_, width_, height_, op.text, static_cast<double>(pixel_x),
                                       static_cast<double>(pixel_y), style, op.font_name);
+        }
+
+        void render_x_axis(const Subplot &subplot, canvas::TextRenderer &text_renderer, int x_start, int y_pos,
+                           int width, const Color &theme_text_color) {
+            // Draw main X-axis line (use theme color instead of axis config color)
+            draw_line(x_start, y_pos, x_start + width, y_pos, theme_text_color);
+
+            // Calculate tick positions
+            double data_min = subplot.x_axis.auto_scale ? subplot.x_min : subplot.x_axis.min_value;
+            double data_max = subplot.x_axis.auto_scale ? subplot.x_max : subplot.x_axis.max_value;
+            double data_range = data_max - data_min;
+
+            if (data_range <= 0)
+                return;
+
+            // Draw ticks and labels
+            for (int i = 0; i <= subplot.x_axis.num_ticks; ++i) {
+                double tick_value = data_min + (data_range * i) / subplot.x_axis.num_ticks;
+                int tick_x = x_start + (width * i) / subplot.x_axis.num_ticks;
+
+                // Draw tick mark (use theme color)
+                draw_line(tick_x, y_pos, tick_x, y_pos + static_cast<int>(subplot.x_axis.tick_length),
+                          theme_text_color);
+
+                // Draw tick label (use theme color)
+                canvas::TextStyle label_style;
+                label_style.color = theme_text_color;
+                label_style.font_size = subplot.x_axis.font_size;
+                label_style.align = canvas::TextAlign::CENTER;
+                label_style.baseline = canvas::TextBaseline::TOP;
+
+                std::string label_text = format_tick_label(tick_value);
+                text_renderer.render_text(pixels_, width_, height_, label_text, static_cast<double>(tick_x),
+                                          static_cast<double>(y_pos + subplot.x_axis.tick_length + 5), label_style, "");
+            }
+
+            // Draw axis label if present (use theme color)
+            if (!subplot.x_axis.label.empty()) {
+                canvas::TextStyle axis_label_style;
+                axis_label_style.color = theme_text_color;
+                axis_label_style.font_size = subplot.x_axis.font_size + 2;
+                axis_label_style.align = canvas::TextAlign::CENTER;
+                axis_label_style.baseline = canvas::TextBaseline::TOP;
+
+                text_renderer.render_text(pixels_, width_, height_, subplot.x_axis.label,
+                                          static_cast<double>(x_start + width / 2.0), static_cast<double>(y_pos + 25),
+                                          axis_label_style, "");
+            }
+        }
+
+        void render_y_axis(const Subplot &subplot, canvas::TextRenderer &text_renderer, int x_pos, int y_start,
+                           int height, const Color &theme_text_color) {
+            // Draw main Y-axis line (use theme color)
+            draw_line(x_pos, y_start, x_pos, y_start + height, theme_text_color);
+
+            // Calculate tick positions
+            double data_min = subplot.y_axis.auto_scale ? subplot.y_min : subplot.y_axis.min_value;
+            double data_max = subplot.y_axis.auto_scale ? subplot.y_max : subplot.y_axis.max_value;
+            double data_range = data_max - data_min;
+
+            if (data_range <= 0)
+                return;
+
+            // Draw ticks and labels
+            for (int i = 0; i <= subplot.y_axis.num_ticks; ++i) {
+                double tick_value = data_min + (data_range * i) / subplot.y_axis.num_ticks;
+                int tick_y = y_start + height - (height * i) / subplot.y_axis.num_ticks; // Flip Y coordinate
+
+                // Draw tick mark (use theme color)
+                draw_line(x_pos - static_cast<int>(subplot.y_axis.tick_length), tick_y, x_pos, tick_y,
+                          theme_text_color);
+
+                // Draw tick label (use theme color)
+                canvas::TextStyle label_style;
+                label_style.color = theme_text_color;
+                label_style.font_size = subplot.y_axis.font_size;
+                label_style.align = canvas::TextAlign::RIGHT;
+                label_style.baseline = canvas::TextBaseline::MIDDLE;
+
+                std::string label_text = format_tick_label(tick_value);
+                text_renderer.render_text(pixels_, width_, height_, label_text,
+                                          static_cast<double>(x_pos - subplot.y_axis.tick_length - 5),
+                                          static_cast<double>(tick_y), label_style, "");
+            }
+
+            // Draw axis label if present (use theme color)
+            if (!subplot.y_axis.label.empty()) {
+                canvas::TextStyle axis_label_style;
+                axis_label_style.color = theme_text_color;
+                axis_label_style.font_size = subplot.y_axis.font_size + 2;
+                axis_label_style.align = canvas::TextAlign::CENTER;
+                axis_label_style.baseline = canvas::TextBaseline::MIDDLE;
+
+                // Render Y-axis label vertically (character by character)
+                render_vertical_text(text_renderer, subplot.y_axis.label, static_cast<double>(x_pos - 40),
+                                     static_cast<double>(y_start + height / 2.0), axis_label_style);
+            }
+        }
+
+        std::string format_tick_label(double value) {
+            // Simple number formatting
+            if (std::abs(value) < 1e-10) {
+                return "0";
+            } else if (std::abs(value) >= 1000 || std::abs(value) < 0.01) {
+                // Use scientific notation for very large or very small numbers
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "%.2e", value);
+                return std::string(buffer);
+            } else {
+                // Use fixed-point notation
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "%.2f", value);
+                // Remove trailing zeros
+                std::string result(buffer);
+                size_t end = result.find_last_not_of('0');
+                if (end != std::string::npos && result[end] == '.') {
+                    end--;
+                }
+                return result.substr(0, end + 1);
+            }
+        }
+
+        void render_vertical_text(canvas::TextRenderer &text_renderer, const std::string &text, 
+                                double x, double y, const canvas::TextStyle &style) {
+            // Calculate the total height needed for the text
+            double char_height = text_renderer.text_height(style, "");
+            double total_height = char_height * text.length();
+            
+            // Start position (center the text vertically around y)
+            double start_y = y - total_height / 2.0;
+            
+            // Render each character below the previous one
+            for (size_t i = 0; i < text.length(); ++i) {
+                std::string single_char(1, text[i]);
+                double char_y = start_y + i * char_height;
+                
+                text_renderer.render_text(pixels_, width_, height_, single_char,
+                                        x, char_y, style, "");
+            }
         }
     };
 

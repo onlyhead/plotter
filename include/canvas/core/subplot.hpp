@@ -19,9 +19,17 @@ namespace plotter {
         std::string title, xlabel, ylabel;
         bool show_grid;
 
+        // Axis configurations
+        AxisConfig x_axis;
+        AxisConfig y_axis;
+
         Subplot(int r, int c, int x_off, int y_off, int w, int h)
             : row(r), col(c), x_offset(x_off), y_offset(y_off), width(w), height(h), x_min(0), x_max(1), y_min(0),
-              y_max(1), has_data(false), title(""), xlabel(""), ylabel(""), show_grid(false) {}
+              y_max(1), has_data(false), title(""), xlabel(""), ylabel(""), show_grid(false) {
+            // Initialize axis configurations
+            x_axis.label = xlabel;
+            y_axis.label = ylabel;
+        }
     };
 
 } // namespace plotter
